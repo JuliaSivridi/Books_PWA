@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Book, BookStatus, BookType } from '../types/book'
 import { STATUS_LABELS, TYPE_LABELS } from '../types/book'
 import { searchBooks as gbSearch, getBookDetails, getCoverUrl } from '../services/googlebooks'
