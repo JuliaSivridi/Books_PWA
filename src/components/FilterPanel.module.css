@@ -1,0 +1,73 @@
+.panel {
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filterRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-2);
+  width: 60px;
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.chip {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: .875rem;
+  font-weight: 500;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.chip:hover { border-color: var(--accent); color: var(--text); }
+
+.chipActive {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.chipActive[data-status="want"]    { background: rgba(245,158,11,.15); color: var(--want);    border-color: var(--want);    }
+.chipActive[data-status="reading"] { background: rgba(59,130,246,.15); color: var(--reading); border-color: var(--reading); }
+.chipActive[data-status="read"]    { background: rgba(16,185,129,.15); color: var(--read);    border-color: var(--read);    }
+
+.kwInput {
+  flex: 1;
+  font-size: .875rem;
+  height: 34px;
+}
+
+.clearBtn {
+  align-self: flex-start;
+  font-size: 0.875rem;
+  color: var(--text-3);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color .15s;
+  padding: 0;
+}
+
+.clearBtn:hover { color: var(--danger); }

@@ -1,0 +1,17 @@
+{
+  "name": "Books — My Book Library",
+  "short_name": "Books",
+  "description": "Personal book collection manager",
+  "theme_color": "#E07E38",
+  "background_color": "#F5F3F0",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

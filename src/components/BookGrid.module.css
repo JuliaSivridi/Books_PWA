@@ -1,0 +1,73 @@
+.wrap {
+  position: relative;
+  min-height: calc(100vh - 120px);
+  padding: 0 0 80px;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error {
+  color: var(--danger);
+  text-align: center;
+  padding: 20px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 20px;
+  color: var(--text-2);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  color: var(--border);
+}
+
+.addFirst {
+  padding: 10px 22px;
+  background: var(--accent);
+  border-radius: var(--radius);
+  font-weight: 600;
+  color: #fff;
+  transition: background .2s;
+  margin-top: 4px;
+}
+
+.addFirst:hover { background: var(--accent-hover); }
+
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(224,126,56,.4);
+  transition: background .2s, transform .15s;
+  z-index: 5;
+}
+
+.fab:hover { background: var(--accent-hover); transform: scale(1.07); }
+.fab .material-symbols-outlined { font-size: 26px; }
