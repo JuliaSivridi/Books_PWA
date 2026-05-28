@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Book, BookStatus, BookType } from '../types/book'
 import { STATUS_LABELS, TYPE_LABELS } from '../types/book'
-import { searchBooks as gbSearch, getBookDetails, getCoverUrl } from '../services/googlebooks'
+import { searchBooks as gbSearch, getBookDetails, getCoverUrl, GBRateLimitError } from '../services/googlebooks'
 import { searchBooks as flSearch, getWorkUrl, mapWorkType } from '../services/fantlab'
 import type { GBVolume } from '../services/googlebooks'
 import type { FLWork } from '../services/fantlab'
@@ -89,6 +89,7 @@ export default function AddBookModal({ book, onClose }: Props) {
   const [query,        setQuery]        = useState('')
   const [results,      setResults]      = useState<SearchResult[]>([])
   const [searching,    setSearching]    = useState(false)
+  const [gbRateLimit,  setGbRateLimit]  = useState(false)
   const [saving,       setSaving]       = useState(false)
   const [saveError,    setSaveError]    = useState('')
 
@@ -100,13 +101,17 @@ export default function AddBookModal({ book, onClose }: Props) {
 
   useEffect(() => {
     clearTimeout(timerRef.current)
-    if (query.length < 2) { setResults([]); return }
+    if (query.length < 2) { setResults([]); setGbRateLimit(false); return }
     timerRef.current = setTimeout(async () => {
       setSearching(true)
+      setGbRateLimit(false)
       const [gbRes, flRes] = await Promise.allSettled([
         gbSearch(query),
         flSearch(query),
       ])
+      if (gbRes.status === 'rejected' && gbRes.reason instanceof GBRateLimitError) {
+        setGbRateLimit(true)
+      }
       const gbBooks = gbRes.status === 'fulfilled' ? gbRes.value : []
       const flWorks = flRes.status === 'fulfilled' ? (flRes.value.works ?? []) : []
       setResults(mergeResults(gbBooks, flWorks))
@@ -252,6 +257,14 @@ export default function AddBookModal({ book, onClose }: Props) {
 
               {searching && (
                 <p className={styles.searchHint}>Searching Google Books and FantLab…</p>
+              )}
+
+              {gbRateLimit && (
+                <p className={styles.rateLimitWarn}>
+                  Google Books daily limit reached — add an API key in{' '}
+                  <button className={styles.settingsLink} onClick={onClose}>Settings</button>
+                  {' '}to restore search.
+                </p>
               )}
 
               {results.length > 0 && (

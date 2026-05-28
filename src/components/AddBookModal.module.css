@@ -223,6 +223,33 @@
   padding: 6px 0;
 }
 
+.rateLimitWarn {
+  font-size: .8rem;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .rateLimitWarn {
+    color: #fde68a;
+    background: rgba(253,230,138,.1);
+    border-color: rgba(253,230,138,.3);
+  }
+}
+
+.settingsLink {
+  font-size: inherit;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
 .skipLink {
   font-size: .8rem;
   color: var(--text-2);

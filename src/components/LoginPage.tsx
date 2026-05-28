@@ -25,7 +25,7 @@ export default function LoginPage({ error: externalError }: Props) {
       <div className={styles.content}>
 
         <div className={styles.logoRow}>
-          <img src="/icons/icon.svg" alt="Books" className={styles.logoIcon} />
+          <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} alt="Books" className={styles.logoIcon} />
           <div className={styles.logoTexts}>
             <h1 className={styles.logoText}>Books</h1>
             <p className={styles.tagline}>Your personal book library</p>

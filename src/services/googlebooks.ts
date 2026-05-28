@@ -1,5 +1,9 @@
 const BASE = 'https://www.googleapis.com/books/v1'
 
+export class GBRateLimitError extends Error {
+  constructor() { super('Google Books rate limit — add an API key in Settings') }
+}
+
 export interface GBVolume {
   id: string
   volumeInfo: {
@@ -30,10 +34,12 @@ export async function searchBooks(query: string): Promise<GBVolume[]> {
 
   try {
     const res = await fetch(`${BASE}/volumes?${params}`)
+    if (res.status === 429) throw new GBRateLimitError()
     if (!res.ok) return []
     const data = await res.json()
     return (data.items as GBVolume[]) ?? []
-  } catch {
+  } catch (e) {
+    if (e instanceof GBRateLimitError) throw e
     return []
   }
 }
