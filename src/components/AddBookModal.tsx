@@ -430,34 +430,43 @@ export default function AddBookModal({ book, onClose }: Props) {
               )}
 
               {/* Sources */}
-              {(form.gb_url || form.fl_url || form.wiki_url || linksLoading) && (
-                <div className={styles.section}>
-                  <p className={styles.label}>
-                    Sources
-                    {linksLoading && <span className={styles.linksSpinner} />}
-                  </p>
-                  <div className={styles.sourceLinks}>
-                    {form.gb_url && (
-                      <a href={form.gb_url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
-                        <span>Google Books</span>
-                        <span className="material-symbols-outlined">open_in_new</span>
-                      </a>
-                    )}
-                    {form.fl_url && (
-                      <a href={form.fl_url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
-                        <span>FantLab</span>
-                        <span className="material-symbols-outlined">open_in_new</span>
-                      </a>
-                    )}
-                    {form.wiki_url && (
-                      <a href={form.wiki_url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
-                        <span>Wikipedia</span>
-                        <span className="material-symbols-outlined">open_in_new</span>
-                      </a>
-                    )}
-                  </div>
+              <div className={styles.section}>
+                <p className={styles.label}>
+                  Sources
+                  {linksLoading && <span className={styles.linksSpinner} />}
+                </p>
+                <div className={styles.sourceLinks}>
+                  {([
+                    { key: 'gb_url',   label: 'Google Books', placeholder: 'https://books.google.com/…' },
+                    { key: 'fl_url',   label: 'FantLab',      placeholder: 'https://fantlab.ru/work…'  },
+                    { key: 'wiki_url', label: 'Wikipedia',    placeholder: 'https://ru.wikipedia.org/…' },
+                  ] as const).map(({ key, label, placeholder }) => {
+                    const url = form[key]
+                    return (
+                      <div key={key} className={styles.linkRow}>
+                        <span className={styles.linkLabel}>{label}</span>
+                        <input
+                          value={url ?? ''}
+                          onChange={e => set(key, e.target.value || undefined)}
+                          placeholder={placeholder}
+                          className={styles.linkInput}
+                        />
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`${styles.openBtn} ${!url ? styles.openBtnDisabled : ''}`}
+                          onClick={e => !url && e.preventDefault()}
+                          tabIndex={url ? 0 : -1}
+                          aria-disabled={!url}
+                        >
+                          <span className="material-symbols-outlined">open_in_new</span>
+                        </a>
+                      </div>
+                    )
+                  })}
                 </div>
-              )}
+              </div>
             </>
           )}
 

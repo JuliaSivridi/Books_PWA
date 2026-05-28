@@ -127,6 +127,11 @@ export function signOut(): void {
   notify(false)
 }
 
+// Called on user click — browser allows the popup because it's a user gesture.
+export function reconnect(): Promise<boolean> {
+  return trySilentSignIn()
+}
+
 export async function refreshTokenIfNeeded(): Promise<string | null> {
   if (isTokenFresh()) return accessToken
   const ok = await trySilentSignIn()

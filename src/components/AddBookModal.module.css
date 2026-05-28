@@ -346,36 +346,53 @@
   white-space: nowrap;
 }
 
-/* Source links */
+/* Source link rows (editable) */
 .sourceLinks {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.sourceLink {
+.linkRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  gap: 8px;
+}
+
+.linkLabel {
+  font-size: .8rem;
+  color: var(--text-2);
+  flex-shrink: 0;
+  width: 88px;
+  font-weight: 500;
+}
+
+.linkInput {
+  flex: 1;
   font-size: .875rem;
-  color: var(--text);
-  text-decoration: none;
-  transition: border-color .15s, background .15s;
+  min-width: 0;
 }
 
-.sourceLink:hover {
-  border-color: var(--accent);
-  background: var(--accent-light);
+.openBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
   text-decoration: none;
-  color: var(--accent);
+  transition: background .15s, color .15s;
 }
 
-.sourceLink .material-symbols-outlined { font-size: 16px; color: var(--text-3); }
-.sourceLink:hover .material-symbols-outlined { color: var(--accent); }
+.openBtn:hover { background: var(--surface-2); color: var(--accent); }
+.openBtn .material-symbols-outlined { font-size: 18px; }
+
+.openBtnDisabled {
+  opacity: .3;
+  pointer-events: none;
+}
 
 /* Inline spinner next to label */
 .linksSpinner {
