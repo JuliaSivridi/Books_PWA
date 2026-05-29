@@ -13,14 +13,14 @@
 }
 
 .filterLabel {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--text-2);
-  width: 60px;
+  width: 68px;
   flex-shrink: 0;
-  padding-top: 6px;
+  padding-top: 7px;
 }
 
 .chips {
@@ -31,9 +31,9 @@
 }
 
 .chip {
-  padding: 4px 14px;
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 500;
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -62,7 +62,7 @@
 
 .clearBtn {
   align-self: flex-start;
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--text-3);
   text-decoration: underline;
   text-underline-offset: 2px;

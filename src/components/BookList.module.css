@@ -43,8 +43,8 @@
 }
 
 .cover {
-  width: 72px;
-  height: 108px;
+  width: 90px;
+  height: 135px;
   object-fit: cover;
   display: block;
   border-radius: 5px;
@@ -112,7 +112,7 @@
 }
 
 .series {
-  font-size: .875rem;
+  font-size: 1rem;
   color: var(--text-3);
   white-space: nowrap;
   overflow: hidden;
@@ -120,7 +120,7 @@
 }
 
 .container {
-  font-size: .875rem;
+  font-size: 1rem;
   color: var(--text-3);
   font-style: italic;
   white-space: nowrap;
