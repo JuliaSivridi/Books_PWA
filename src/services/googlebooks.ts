@@ -65,3 +65,9 @@ export function getCoverUrl(imageLinks?: GBVolume['volumeInfo']['imageLinks']): 
   const url = imageLinks?.thumbnail || imageLinks?.smallThumbnail
   return url ? url.replace('http://', 'https://') : undefined
 }
+
+// Construct modern Books UI URL — infoLink from the API points to the old
+// "classic" Google Books interface which is being shut down.
+export function getBookPageUrl(gbId: string): string {
+  return `https://books.google.com/books/edition/_/${gbId}?gbpv=0`
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Book, BookStatus, BookType } from '../types/book'
 import { STATUS_LABELS, TYPE_LABELS } from '../types/book'
-import { searchBooks as gbSearch, getBookDetails, getCoverUrl, GBRateLimitError } from '../services/googlebooks'
+import { searchBooks as gbSearch, getBookDetails, getCoverUrl, getBookPageUrl, GBRateLimitError } from '../services/googlebooks'
 import { searchBooks as flSearch, getWorkUrl, mapWorkType, getWorkGenres } from '../services/fantlab'
 import type { GBVolume } from '../services/googlebooks'
 import type { FLWork } from '../services/fantlab'
@@ -154,7 +154,7 @@ export default function AddBookModal({ book, onClose }: Props) {
     const type       = result.fl ? mapWorkType(result.fl.work_type_name) : undefined
     const cover_url  = getCover(result)
     const gb_id      = result.gb?.id
-    const gb_url     = result.gb?.volumeInfo.infoLink
+    const gb_url     = result.gb ? getBookPageUrl(result.gb.id) : undefined
     const fl_work_id = result.fl?.work_id != null ? String(result.fl.work_id) : undefined
     const fl_url     = result.fl ? getWorkUrl(result.fl.work_id) : undefined
 
