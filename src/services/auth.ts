@@ -1,5 +1,5 @@
 // Google Identity Services – client-side OAuth 2.0
-// Token lives in memory only; user profile persisted in localStorage.
+// Token is persisted in localStorage so page refresh doesn't require GIS popup.
 
 const SCOPES = [
   'email',
@@ -8,7 +8,9 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive.metadata.readonly',
 ].join(' ')
 
-const USER_KEY = 'books_user'
+const USER_KEY         = 'books_user'
+const TOKEN_KEY        = 'books_token'
+const TOKEN_EXPIRY_KEY = 'books_token_expiry'
 
 let accessToken: string | null = null
 let tokenExpiresAt = 0
@@ -48,6 +50,36 @@ function notify(isAuth: boolean) {
   listeners.forEach(fn => fn(isAuth))
 }
 
+// ── Token persistence ────────────────────────────────────────────────────────
+
+function persistToken(token: string, expiresIn: number) {
+  const expiry = Date.now() + expiresIn * 1000
+  localStorage.setItem(TOKEN_KEY, token)
+  localStorage.setItem(TOKEN_EXPIRY_KEY, String(expiry))
+  accessToken = token
+  tokenExpiresAt = expiry
+}
+
+function loadPersistedToken(): boolean {
+  const token  = localStorage.getItem(TOKEN_KEY)
+  const expiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) ?? '0')
+  if (token && Date.now() < expiry - 30_000) {
+    accessToken    = token
+    tokenExpiresAt = expiry
+    return true
+  }
+  return false
+}
+
+function clearPersistedToken() {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(TOKEN_EXPIRY_KEY)
+  accessToken    = null
+  tokenExpiresAt = 0
+}
+
+// ── GIS helpers ──────────────────────────────────────────────────────────────
+
 async function fetchUserProfile(): Promise<UserProfile | null> {
   if (!accessToken) return null
   try {
@@ -72,8 +104,7 @@ function makeTokenClient(
         onError(r.error)
         return
       }
-      accessToken = r.access_token
-      tokenExpiresAt = Date.now() + (r.expires_in ?? 3600) * 1000
+      persistToken(r.access_token, r.expires_in ?? 3600)
 
       if (!getUser()) {
         try {
@@ -104,6 +135,10 @@ export function trySilentSignIn(): Promise<boolean> {
   })
 }
 
+export function reconnect(): Promise<boolean> {
+  return trySilentSignIn()
+}
+
 export function signIn(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!window.google?.accounts?.oauth2) {
@@ -121,19 +156,14 @@ export function signIn(): Promise<void> {
 export function signOut(): void {
   const email = getUser()?.email
   if (email) window.google?.accounts?.oauth2?.revoke(email, () => {})
-  accessToken = null
-  tokenExpiresAt = 0
+  clearPersistedToken()
   localStorage.removeItem(USER_KEY)
   notify(false)
 }
 
-// Called on user click — browser allows the popup because it's a user gesture.
-export function reconnect(): Promise<boolean> {
-  return trySilentSignIn()
-}
-
 export async function refreshTokenIfNeeded(): Promise<string | null> {
   if (isTokenFresh()) return accessToken
+  if (loadPersistedToken()) return accessToken
   const ok = await trySilentSignIn()
   return ok ? accessToken : null
 }
@@ -150,8 +180,14 @@ function waitForGIS(): Promise<void> {
 
 export async function initAuth(clientId: string): Promise<void> {
   CLIENT_ID = clientId
-  await waitForGIS()
 
+  // Fast path: use stored token if still valid — no GIS popup needed
+  if (getUser() && loadPersistedToken()) {
+    notify(true)
+    return
+  }
+
+  await waitForGIS()
   if (getUser()) {
     const ok = await trySilentSignIn()
     if (!ok) notify(false)

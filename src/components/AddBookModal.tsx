@@ -256,7 +256,7 @@ export default function AddBookModal({ book, onClose }: Props) {
               </div>
 
               {searching && (
-                <p className={styles.searchHint}>Searching Google Books and FantLab…</p>
+                <p className={styles.searchHint}>Searching Google Books…</p>
               )}
 
               {gbRateLimit && (

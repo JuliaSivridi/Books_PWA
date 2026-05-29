@@ -27,14 +27,10 @@ export interface FLSearchResult {
   works?: FLWork[]
 }
 
-export async function searchBooks(query: string): Promise<FLSearchResult> {
-  try {
-    const res = await fetch(`${BASE}/search-work?q=${encodeURIComponent(query)}&page=1&onlymatches=1`)
-    if (!res.ok) return { works: [] }
-    return await res.json() as FLSearchResult
-  } catch {
-    return { works: [] }
-  }
+// FantLab API blocks browser requests (no CORS headers).
+// Search is disabled; URLs are entered manually in the form.
+export async function searchBooks(_query: string): Promise<FLSearchResult> {
+  return { works: [] }
 }
 
 export function getWorkUrl(workId: number): string {
