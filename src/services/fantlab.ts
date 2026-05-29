@@ -3,14 +3,23 @@ import type { BookType } from '../types/book'
 const BASE = 'https://api.fantlab.ru'
 
 const FL_TYPE_MAP: Record<string, BookType> = {
-  'Роман':             'novel',
-  'Рассказ':           'story',
-  'Микрорассказ':      'story',
-  'Повесть':           'novella',
-  'Сборник':           'collection',
-  'Антология':         'collection',
-  'Цикл':              'collection',
-  'Авторский сборник': 'collection',
+  // Russian names (from name_type)
+  'роман':             'novel',
+  'рассказ':           'story',
+  'микрорассказ':      'story',
+  'повесть':           'novella',
+  'сборник':           'collection',
+  'антология':         'collection',
+  'цикл':              'collection',
+  'авторский сборник': 'collection',
+  // English icons (from name_type_icon)
+  'novel':             'novel',
+  'story':             'story',
+  'shortstory':        'story',
+  'novella':           'novella',
+  'cycle':             'collection',
+  'anthology':         'collection',
+  'collection':        'collection',
 }
 
 export interface FLWork {
@@ -35,7 +44,8 @@ interface FLMiniWork {
   image?: string
   image_preview?: string
   year?: number
-  name_type?: string
+  name_type?: string       // Russian: "Роман", "Рассказ", etc.
+  name_type_icon?: string  // English: "novel", "story", "novella", "cycle", etc.
   creators?: {
     authors?: Array<{ id: number; name: string }>
   }
@@ -59,7 +69,7 @@ export async function searchBooks(query: string): Promise<FLSearchResult> {
       work_name_orig: w.name_orig,
       work_year:      w.year,
       authors:        (w.creators?.authors ?? []).map(a => ({ id: a.id, name: a.name })),
-      work_type_name: w.name_type ?? '',
+      work_type_name: w.name_type ?? w.name_type_icon ?? '',
       image:          fixImageUrl(w.image_preview ?? w.image),
     }))
     return { works }
@@ -73,5 +83,5 @@ export function getWorkUrl(workId: number): string {
 }
 
 export function mapWorkType(workTypeName: string): BookType {
-  return FL_TYPE_MAP[workTypeName] ?? 'other'
+  return FL_TYPE_MAP[workTypeName.toLowerCase()] ?? 'other'
 }
