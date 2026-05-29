@@ -17,8 +17,8 @@ type ListItem =
 
 const CYRILLIC = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
 
-function authorFirstLetter(author: string): string {
-  const ch = author[0]?.toUpperCase() ?? ''
+function titleFirstLetter(title: string): string {
+  const ch = title[0]?.toUpperCase() ?? ''
   if (/[А-ЯЁ]/.test(ch)) return ch
   if (/[A-Z]/.test(ch))   return ch
   return '#'
@@ -39,13 +39,13 @@ function scrollToLetter(letter: string) {
 export default function BookList({ books, onEdit, alphaOpen, onAlphaClose }: Props) {
   const { items, letters } = useMemo<{ items: ListItem[]; letters: string[] }>(() => {
     const sorted = [...books].sort((a, b) => {
-      const cmp = a.author.localeCompare(b.author, 'ru')
-      return cmp !== 0 ? cmp : a.title.localeCompare(b.title, 'ru')
+      const cmp = a.title.localeCompare(b.title, 'ru')
+      return cmp !== 0 ? cmp : a.author.localeCompare(b.author, 'ru')
     })
 
     const map: Record<string, Book[]> = {}
     for (const b of sorted) {
-      const l = authorFirstLetter(b.author)
+      const l = titleFirstLetter(b.title)
       if (!map[l]) map[l] = []
       map[l].push(b)
     }
