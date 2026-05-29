@@ -1,7 +1,5 @@
 import type { BookType } from '../types/book'
 
-const BASE = 'https://api.fantlab.ru'
-
 const FL_TYPE_MAP: Record<string, BookType> = {
   'Роман':             'novel',
   'Рассказ':           'story',
