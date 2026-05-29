@@ -1,5 +1,7 @@
 import type { BookType } from '../types/book'
 
+const BASE = 'https://api.fantlab.ru'
+
 const FL_TYPE_MAP: Record<string, BookType> = {
   'Роман':             'novel',
   'Рассказ':           'story',
@@ -25,10 +27,45 @@ export interface FLSearchResult {
   works?: FLWork[]
 }
 
-// FantLab API blocks browser requests (no CORS headers).
-// Search is disabled; URLs are entered manually in the form.
-export async function searchBooks(_query: string): Promise<FLSearchResult> {
-  return { works: [] }
+// Shape returned by /search-txt mini-cards
+interface FLMiniWork {
+  id: number
+  name?: string
+  name_orig?: string
+  image?: string
+  image_preview?: string
+  year?: number
+  name_type?: string
+  creators?: {
+    authors?: Array<{ id: number; name: string }>
+  }
+}
+
+function fixImageUrl(url?: string): string | undefined {
+  if (!url) return undefined
+  if (url.startsWith('//')) return 'https:' + url
+  if (url.startsWith('/'))  return 'https://fantlab.ru' + url
+  return url
+}
+
+export async function searchBooks(query: string): Promise<FLSearchResult> {
+  try {
+    const res = await fetch(`${BASE}/search-txt?q=${encodeURIComponent(query)}`)
+    if (!res.ok) return { works: [] }
+    const data = await res.json() as { works?: FLMiniWork[] }
+    const works: FLWork[] = (data.works ?? []).map(w => ({
+      work_id:        w.id,
+      work_name:      w.name ?? '',
+      work_name_orig: w.name_orig,
+      work_year:      w.year,
+      authors:        (w.creators?.authors ?? []).map(a => ({ id: a.id, name: a.name })),
+      work_type_name: w.name_type ?? '',
+      image:          fixImageUrl(w.image_preview ?? w.image),
+    }))
+    return { works }
+  } catch {
+    return { works: [] }
+  }
 }
 
 export function getWorkUrl(workId: number): string {
