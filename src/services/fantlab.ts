@@ -82,6 +82,39 @@ export function getWorkUrl(workId: number): string {
   return `https://fantlab.ru/work${workId}`
 }
 
+interface FLGenreItem {
+  label: string
+  percent?: number
+  genre?: FLGenreItem[]
+}
+
+export async function getWorkGenres(workId: number): Promise<string[]> {
+  try {
+    const res = await fetch(`${BASE}/work/${workId}/extended`)
+    if (!res.ok) return []
+    const data = await res.json() as {
+      classificatory?: { genre_group?: Array<{ label: string; genre?: FLGenreItem[] }> }
+    }
+    const groups = data.classificatory?.genre_group ?? []
+    const genreGroup = groups.find(g => /жанр/i.test(g.label))
+    if (!genreGroup?.genre) return []
+
+    const result: string[] = []
+    const collect = (items: FLGenreItem[]) => {
+      for (const item of items) {
+        if ((item.percent ?? 0) >= 0.1) {
+          result.push(item.label)
+          if (item.genre?.length) collect(item.genre)
+        }
+      }
+    }
+    collect(genreGroup.genre)
+    return result.slice(0, 8)
+  } catch {
+    return []
+  }
+}
+
 export function mapWorkType(workTypeName: string): BookType {
   return FL_TYPE_MAP[workTypeName.toLowerCase()] ?? 'other'
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Book, BookStatus, BookType } from '../types/book'
 import { STATUS_LABELS, TYPE_LABELS } from '../types/book'
 import { searchBooks as gbSearch, getBookDetails, getCoverUrl, GBRateLimitError } from '../services/googlebooks'
-import { searchBooks as flSearch, getWorkUrl, mapWorkType } from '../services/fantlab'
+import { searchBooks as flSearch, getWorkUrl, mapWorkType, getWorkGenres } from '../services/fantlab'
 import type { GBVolume } from '../services/googlebooks'
 import type { FLWork } from '../services/fantlab'
 import { lookupByIsbn } from '../services/wikidata'
@@ -174,6 +174,16 @@ export default function AddBookModal({ book, onClose }: Props) {
     })
     setPhase('form')
 
+    // FL genre enrichment — runs in background, GB genres override if available
+    if (fl_work_id) {
+      const flId = parseInt(fl_work_id)
+      const snapshotGbId = gb_id ?? null
+      getWorkGenres(flId).then(genres => {
+        if (currentGbRef.current !== snapshotGbId) return  // stale
+        if (genres.length) setForm(f => ({ ...f, genres: f.genres?.length ? f.genres : genres }))
+      })
+    }
+
     if (!gb_id) return
 
     setLinksLoading(true)
@@ -181,7 +191,7 @@ export default function AddBookModal({ book, onClose }: Props) {
       const { isbn13, categories } = await getBookDetails(gb_id)
       if (currentGbRef.current !== gb_id) return
 
-      if (categories.length) setForm(f => ({ ...f, genres: categories }))
+      if (categories.length) setForm(f => ({ ...f, genres: categories }))  // GB overrides FL
 
       if (isbn13) {
         const { wiki_url } = await lookupByIsbn(isbn13)
