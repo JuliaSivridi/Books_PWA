@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Books PWA — Technical Specification</title>
+  <style>
+  @page { margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #1a1a1a;
+    background: #fff;
+    padding: 0;
+  }
+
+  /* Cover page */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px 72px;
+    background: #1c1c1c;
+    color: #fff;
+    page-break-after: always;
+  }
+  .cover .logo {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .cover .logo span { color: #e07e38; }
+  .cover .subtitle {
+    font-size: 18px;
+    color: #a1a1aa;
+    margin-bottom: 40px;
+  }
+  .cover .meta { font-size: 13px; color: #71717a; line-height: 2; }
+  .cover .meta strong { color: #d4d4d8; }
+  .cover .accent-line {
+    width: 60px;
+    height: 4px;
+    background: #e07e38;
+    border-radius: 2px;
+    margin-bottom: 32px;
+  }
+  .cover .inspiration {
+    margin-top: 48px;
+    padding: 16px 20px;
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid #e07e38;
+    border-radius: 6px;
+    background: #222;
+    font-size: 12px;
+    color: #a1a1aa;
+    max-width: 480px;
+  }
+  .cover .inspiration strong { color: #e4e4e7; }
+
+  /* Content pages */
+  .content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 56px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1c1c1c;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e07e38;
+    page-break-before: always;
+  }
+  h1:first-child { page-break-before: avoid; margin-top: 0; }
+
+  h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1c1c1c;
+    margin-top: 32px;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 20px;
+    margin-bottom: 6px;
+  }
+
+  p { margin-bottom: 12px; }
+
+  a { color: #e07e38; text-decoration: none; }
+
+  ul, ol {
+    margin: 8px 0 12px 22px;
+  }
+  li { margin-bottom: 4px; }
+
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    background: #f4f4f5;
+    border: 1px solid #e4e4e7;
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: #d97706;
+  }
+
+  pre {
+    background: #1c1c1c;
+    color: #e4e4e7;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0 16px;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px;
+    font-size: 12.5px;
+  }
+  th {
+    background: #f4f4f5;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border: 1px solid #e4e4e7;
+    color: #374151;
+  }
+  td {
+    padding: 7px 12px;
+    border: 1px solid #e4e4e7;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+    margin-right: 4px;
+  }
+
+  .callout {
+    background: #fff7ed;
+    border-left: 3px solid #e07e38;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 12.5px;
+  }
+
+  .note {
+    background: #f0f9ff;
+    border-left: 3px solid #0ea5e9;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 12.5px;
+  }
+
+  .dir-tree {
+    background: #1c1c1c;
+    color: #e4e4e7;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0 16px;
+    font-family: 'Consolas', monospace;
+    font-size: 11.5px;
+    line-height: 1.8;
+  }
+  .dir-tree .dim { color: #71717a; }
+  .dir-tree .orange { color: #fb923c; }
+  .dir-tree .green { color: #86efac; }
+  .dir-tree .blue { color: #93c5fd; }
+
+  .toc {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin: 24px 0 32px;
+  }
+  .toc h2 { margin-top: 0; margin-bottom: 12px; font-size: 15px; }
+  .toc ol { margin: 0; }
+  .toc li { margin-bottom: 6px; font-size: 13px; }
+  .toc li a { color: #374151; }
+  .toc li a:hover { color: #e07e38; }
+
+  @media print {
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="logo">Books <span>PWA</span></div>
+  <div class="subtitle">Technical Specification</div>
+  <div class="accent-line"></div>
+  <div class="meta">
+    <strong>Version</strong> 0.1.0<br>
+    <strong>Repository</strong> https://github.com/JuliaSivridi/Books_PWA<br>
+    <strong>Live app</strong> https://juliasivridi.github.io/Books_PWA/<br>
+    <strong>Stack</strong> React 18 · TypeScript 5 · Vite 5 · Google Sheets API v4
+  </div>
+  <div class="inspiration">
+    <strong>Storage model:</strong> No backend server. Every book record lives in the user's own Google Sheets file (<code>db_books</code>), accessed directly via the Sheets API v4 from the browser.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ CONTENT -->
+<div class="content" style="max-width:720px; margin:auto">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li><a href="#s1">Overview</a></li>
+      <li><a href="#s2">Tech Stack</a></li>
+      <li><a href="#s3">Architecture</a></li>
+      <li><a href="#s4">Package / Folder Structure</a></li>
+      <li><a href="#s5">Data Model</a></li>
+      <li><a href="#s6">External Storage Schema (Google Sheets)</a></li>
+      <li><a href="#s7">Authentication &amp; First-Launch Setup</a></li>
+      <li><a href="#s8">API Layer</a></li>
+      <li><a href="#s9">UI Screens</a></li>
+      <li><a href="#s10">Key Components</a></li>
+      <li><a href="#s11">Theme &amp; Colors</a></li>
+      <li><a href="#s12">PWA Manifest</a></li>
+      <li><a href="#s13">Loading &amp; Empty States</a></li>
+      <li><a href="#s14">CI/CD &amp; Build</a></li>
+      <li><a href="#s15">First-Time Setup (New Developer)</a></li>
+      <li><a href="#s16">Key Algorithms</a></li>
+    </ol>
+  </div>
+
+  <!-- ─── 1. Overview ─────────────────────────────────────────────────────── -->
+  <h1 id="s1">1. Overview</h1>
+
+  <p><strong>Books PWA</strong> is a personal book-tracking application. The user maintains a reading list across three statuses (Want / Reading / Read) and enriches each book with metadata fetched from Google Books and FantLab. All data is stored in the user's own Google Sheets file — there is no backend server.</p>
+
+  <h2>Key design decisions</h2>
+  <table>
+    <thead><tr><th>Decision</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td>Google Sheets as database</td><td>Zero infrastructure cost; data is human-readable and owned by the user</td></tr>
+      <tr><td>GIS implicit token flow with localStorage persistence</td><td>Survives page refresh without triggering a popup (browsers block cross-origin popups on load)</td></tr>
+      <tr><td>Parallel GB + FL search merged client-side</td><td>Combines English-catalogue depth (Google Books) with Russian-fantasy coverage (FantLab)</td></tr>
+      <tr><td>React Context + useReducer, no external state library</td><td>Small surface area; all state fits in one BooksContext</td></tr>
+      <tr><td>CSS Modules, no UI framework</td><td>Fine-grained control; avoids large CSS bundle</td></tr>
+      <tr><td>Vite + SWC</td><td>Fast cold starts and HMR</td></tr>
+      <tr><td>GitHub Actions → GitHub Pages</td><td>Fully serverless deployment</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─── 2. Tech Stack ───────────────────────────────────────────────────── -->
+  <h1 id="s2">2. Tech Stack</h1>
+
+  <table>
+    <thead><tr><th>Layer</th><th>Library</th><th>Version</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>UI framework</td><td>react</td><td>^18.3.1</td><td>Strict mode enabled in main.tsx</td></tr>
+      <tr><td>UI framework</td><td>react-dom</td><td>^18.3.1</td><td></td></tr>
+      <tr><td>Bundler</td><td>vite</td><td>^5.3.4</td><td>base: '/Books_PWA/'</td></tr>
+      <tr><td>Compiler plugin</td><td>@vitejs/plugin-react-swc</td><td>^3.7.0</td><td>SWC-based JSX transform</td></tr>
+      <tr><td>Language</td><td>typescript</td><td>^5.5.3</td><td>target ES2020, strict mode</td></tr>
+      <tr><td>Auth</td><td>Google Identity Services</td><td>runtime CDN</td><td>Implicit token flow, <code>&lt;script async defer&gt;</code></td></tr>
+      <tr><td>Database</td><td>Google Sheets API v4</td><td>runtime</td><td>No SDK; direct fetch calls</td></tr>
+      <tr><td>File discovery</td><td>Google Drive API v3</td><td>runtime</td><td>drive.metadata.readonly scope only</td></tr>
+      <tr><td>Book search</td><td>Google Books API v1</td><td>runtime</td><td>No SDK; optional API key</td></tr>
+      <tr><td>Book search</td><td>FantLab API</td><td>runtime</td><td>No auth; public API</td></tr>
+      <tr><td>Wikipedia lookup</td><td>Wikidata SPARQL</td><td>runtime</td><td>ISBN-13 → Wikipedia URL</td></tr>
+      <tr><td>Icons</td><td>Material Symbols Outlined</td><td>runtime CDN</td><td>FILL=0, wght=300, GRAD=0, opsz=24</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─── 3. Architecture ─────────────────────────────────────────────────── -->
+  <h1 id="s3">3. Architecture</h1>
+
+  <p><strong>Pattern:</strong> flat React Context (no MVVM, no Redux). State lives in <code>BooksContext</code>; components read and dispatch through <code>useBooks()</code>.</p>
+
+  <h2>Data-flow diagram</h2>
+  <pre><code>User action
+    │
+    ▼
+Component (e.g. AddBookModal)
+    │  calls context method
+    ▼
+BooksContext (create / edit / remove / setQuery / setFilters)
+    │  calls service function
+    ▼
+sheets.ts (addBook / updateBook / deleteBook / fetchBooks)
+    │  calls auth.ts for fresh token
+    ▼
+Google Sheets API v4  ←→  Google Drive API v3
+    │
+    ▼
+dispatch(action) → reducer → new state
+    │
+    ▼
+useMemo: filtered books, indexes
+    │
+    ▼
+Component re-render</code></pre>
+
+  <h2>Write path (create a book)</h2>
+  <ol>
+    <li>User fills form in <code>AddBookModal</code> and clicks "Add book".</li>
+    <li><code>handleSave()</code> calls <code>create({ id: uuid(), ...form })</code> from <code>BooksContext</code>.</li>
+    <li><code>create</code> calls <code>addBook(book)</code> in <code>sheets.ts</code>.</li>
+    <li><code>sheets.ts</code> calls <code>refreshTokenIfNeeded()</code> → returns cached or refreshed access token.</li>
+    <li><code>fetch POST</code> to <code>.../values/Books!A:P:append?valueInputOption=RAW&amp;insertDataOption=INSERT_ROWS</code>.</li>
+    <li>Response <code>updates.updatedRange</code> (e.g. <code>Books!A5:P5</code>) is parsed to extract the row number.</li>
+    <li>Book returned with <code>_row</code> set; <code>dispatch({ type: 'ADD', payload: saved })</code> appends to <code>state.books</code>.</li>
+    <li>Modal closes; <code>filtered</code> is recomputed by <code>useMemo</code>.</li>
+  </ol>
+
+  <h2>Read path</h2>
+  <ol>
+    <li><code>MainContent</code> mounts → <code>useEffect(() =&gt; { load() }, [load])</code>.</li>
+    <li><code>load()</code> dispatches <code>LOADING</code>, calls <code>initializeSheet()</code>, then <code>fetchBooks()</code>.</li>
+    <li><code>fetchBooks</code> does <code>GET /values/Books!A:P</code>, slices off header row, maps via <code>rowToBook()</code>.</li>
+    <li><code>dispatch({ type: 'SET', payload: books })</code> → <code>state.books</code> updated.</li>
+    <li><code>useMemo</code> recomputes <code>filtered</code>, <code>gbIndex</code>, <code>flIndex</code>, <code>titleIndex</code>.</li>
+    <li><code>BookGrid</code> renders <code>BookList</code> with <code>filtered</code>.</li>
+  </ol>
+
+  <h2>Error handling</h2>
+  <ul>
+    <li>Every <code>sheets.ts</code> function throws <code>Error(message)</code> on non-OK HTTP. Message comes from <code>err.error.message</code> or falls back to <code>"Sheets API {status}"</code>.</li>
+    <li><code>BooksContext.load()</code> catches and dispatches <code>{ type: 'ERROR', payload: String(e) }</code>.</li>
+    <li><code>BookGrid</code> renders the error string in <code>--danger</code> red.</li>
+    <li><code>AddBookModal.handleSave()</code> catches and sets local <code>saveError</code> state.</li>
+    <li>External enrichment calls (FantLab genres, Wikidata) fail silently — they never block saving.</li>
+  </ul>
+
+  <!-- ─── 4. Folder Structure ─────────────────────────────────────────────── -->
+  <h1 id="s4">4. Package / Folder Structure</h1>
+
+  <div class="dir-tree">
+<span class="orange">Books-PWA/</span><br>
+├── <span class="blue">.github/workflows/</span><br>
+│   └── deploy.yml          <span class="dim">CI/CD: build + deploy to GitHub Pages</span><br>
+├── <span class="blue">docs/</span><br>
+│   ├── tech-spec-example.css   <span class="dim">CSS template for HTML spec</span><br>
+│   ├── tech-spec.md            <span class="dim">Markdown specification</span><br>
+│   └── tech-spec.html          <span class="dim">HTML specification (this file)</span><br>
+├── <span class="blue">public/</span><br>
+│   ├── manifest.json           <span class="dim">PWA manifest (name, icons, start_url)</span><br>
+│   └── icons/icon.svg          <span class="dim">App icon: orange rounded rect + white outlined book</span><br>
+├── <span class="blue">src/</span><br>
+│   ├── main.tsx                <span class="dim">React root; mounts &lt;App /&gt; in StrictMode</span><br>
+│   ├── App.tsx                 <span class="dim">Phase machine (loading/login/ready); context providers</span><br>
+│   ├── App.module.css          <span class="dim">Splash screen styles</span><br>
+│   ├── index.css               <span class="dim">Global CSS variables (light+dark), resets, Material Symbols</span><br>
+│   ├── vite-env.d.ts           <span class="dim">Vite type declarations</span><br>
+│   ├── google.d.ts             <span class="dim">TypeScript types for window.google GIS API</span><br>
+│   ├── <span class="green">types/book.ts</span>           <span class="dim">Book interface, BookStatus, BookType, label/color maps</span><br>
+│   ├── <span class="green">services/</span><br>
+│   │   ├── auth.ts             <span class="dim">GIS OAuth2 token management + localStorage persistence</span><br>
+│   │   ├── drive.ts            <span class="dim">Drive API: find/create db_books, list sheets</span><br>
+│   │   ├── sheets.ts           <span class="dim">Sheets API CRUD: row↔Book mapper, initializeSheet, CRUD ops</span><br>
+│   │   ├── googlebooks.ts      <span class="dim">Google Books API: search, getBookDetails, cover URL, page URL</span><br>
+│   │   ├── fantlab.ts          <span class="dim">FantLab API: search-txt, work genres, type mapping</span><br>
+│   │   └── wikidata.ts         <span class="dim">Wikidata SPARQL: ISBN-13 → Wikipedia URL</span><br>
+│   ├── <span class="green">context/</span><br>
+│   │   ├── AuthContext.tsx     <span class="dim">React context wrapping auth.ts</span><br>
+│   │   └── BooksContext.tsx    <span class="dim">Central state: books[], filters, query, CRUD, indexes</span><br>
+│   └── <span class="green">components/</span><br>
+│       ├── LoginPage.tsx       <span class="dim">Full-screen sign-in page</span><br>
+│       ├── Header.tsx          <span class="dim">Sticky top bar: logo, search, filter toggle, user menu</span><br>
+│       ├── FilterPanel.tsx     <span class="dim">Expandable filter: status chips + type chips</span><br>
+│       ├── BookGrid.tsx        <span class="dim">Container: loading/error/empty states, FAB, AddBookModal</span><br>
+│       ├── BookList.tsx        <span class="dim">Alphabetically grouped list with dividers</span><br>
+│       ├── AlphaPicker.tsx     <span class="dim">Modal letter-grid for alphabetical navigation</span><br>
+│       ├── AddBookModal.tsx    <span class="dim">Two-phase modal: search → form, with enrichment</span><br>
+│       ├── StatsPage.tsx       <span class="dim">Full-page statistics with donut charts</span><br>
+│       └── SettingsModal.tsx   <span class="dim">Settings: spreadsheet picker + GB API key</span><br>
+  </div>
+
+  <!-- ─── 5. Data Model ───────────────────────────────────────────────────── -->
+  <h1 id="s5">5. Data Model</h1>
+
+  <h2>Book interface (<code>src/types/book.ts</code>)</h2>
+
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>string</td><td>yes</td><td>UUID (crypto.randomUUID or timestamp+random fallback)</td></tr>
+      <tr><td><code>title</code></td><td>string</td><td>yes</td><td>Book title</td></tr>
+      <tr><td><code>author</code></td><td>string</td><td>yes</td><td>Primary author name</td></tr>
+      <tr><td><code>year</code></td><td>number</td><td>no</td><td>Publication year</td></tr>
+      <tr><td><code>status</code></td><td>BookStatus</td><td>yes</td><td><code>'want'</code> / <code>'reading'</code> / <code>'read'</code></td></tr>
+      <tr><td><code>type</code></td><td>BookType</td><td>no</td><td><code>'novel'</code> / <code>'story'</code> / <code>'novella'</code> / <code>'collection'</code> / <code>'other'</code></td></tr>
+      <tr><td><code>cover_url</code></td><td>string</td><td>no</td><td>Cover image URL (HTTPS)</td></tr>
+      <tr><td><code>gb_id</code></td><td>string</td><td>no</td><td>Google Books volume ID</td></tr>
+      <tr><td><code>gb_url</code></td><td>string</td><td>no</td><td>Modern Google Books page URL</td></tr>
+      <tr><td><code>fl_work_id</code></td><td>string</td><td>no</td><td>FantLab work ID (stored as string)</td></tr>
+      <tr><td><code>fl_url</code></td><td>string</td><td>no</td><td>FantLab work page URL</td></tr>
+      <tr><td><code>wiki_url</code></td><td>string</td><td>no</td><td>Wikipedia article URL</td></tr>
+      <tr><td><code>genres</code></td><td>string[]</td><td>no</td><td>Genre tags (from GB categories or FL classificatory)</td></tr>
+      <tr><td><code>container_title</code></td><td>string</td><td>no</td><td>Anthology or collection this work appears in</td></tr>
+      <tr><td><code>series_name</code></td><td>string</td><td>no</td><td>Series name</td></tr>
+      <tr><td><code>series_order</code></td><td>number</td><td>no</td><td>Position in series</td></tr>
+      <tr><td><code>_row</code></td><td>number</td><td>no</td><td><strong>Runtime only.</strong> 1-based Google Sheets row number. Never written to the sheet.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Status labels and colors</h2>
+  <table>
+    <thead><tr><th>Value</th><th>Label</th><th>Color</th></tr></thead>
+    <tbody>
+      <tr><td><code>want</code></td><td>Want</td><td><code>#f59e0b</code></td></tr>
+      <tr><td><code>reading</code></td><td>Reading</td><td><code>#3b82f6</code></td></tr>
+      <tr><td><code>read</code></td><td>Read</td><td><code>#10b981</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Type labels</h2>
+  <table>
+    <thead><tr><th>Value</th><th>Label (Russian)</th></tr></thead>
+    <tbody>
+      <tr><td><code>novel</code></td><td>Роман</td></tr>
+      <tr><td><code>story</code></td><td>Рассказ</td></tr>
+      <tr><td><code>novella</code></td><td>Повесть</td></tr>
+      <tr><td><code>collection</code></td><td>Сборник</td></tr>
+      <tr><td><code>other</code></td><td>Прочее</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─── 6. Storage Schema ───────────────────────────────────────────────── -->
+  <h1 id="s6">6. External Storage Schema (Google Sheets)</h1>
+
+  <p><strong>Drive file name:</strong> <code>db_books</code> &nbsp;|&nbsp; <strong>MIME type:</strong> <code>application/vnd.google-apps.spreadsheet</code> &nbsp;|&nbsp; <strong>Sheet tab:</strong> <code>Books</code></p>
+
+  <h2>Column layout (A–P)</h2>
+  <table>
+    <thead><tr><th>Column</th><th>Index</th><th>Field</th><th>Value format</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>0</td><td><code>id</code></td><td>UUID string</td></tr>
+      <tr><td>B</td><td>1</td><td><code>title</code></td><td>Plain string</td></tr>
+      <tr><td>C</td><td>2</td><td><code>author</code></td><td>Plain string</td></tr>
+      <tr><td>D</td><td>3</td><td><code>year</code></td><td>Integer string, e.g. <code>"1984"</code></td></tr>
+      <tr><td>E</td><td>4</td><td><code>status</code></td><td>Literal: <code>"want"</code> / <code>"reading"</code> / <code>"read"</code></td></tr>
+      <tr><td>F</td><td>5</td><td><code>type</code></td><td>Literal: <code>"novel"</code> / <code>"story"</code> / <code>"novella"</code> / <code>"collection"</code> / <code>"other"</code> or empty</td></tr>
+      <tr><td>G</td><td>6</td><td><code>cover_url</code></td><td>HTTPS URL or empty</td></tr>
+      <tr><td>H</td><td>7</td><td><code>gb_id</code></td><td>Google Books volume ID or empty</td></tr>
+      <tr><td>I</td><td>8</td><td><code>gb_url</code></td><td>Full URL or empty</td></tr>
+      <tr><td>J</td><td>9</td><td><code>fl_work_id</code></td><td>FantLab numeric ID as string or empty</td></tr>
+      <tr><td>K</td><td>10</td><td><code>fl_url</code></td><td>Full URL or empty</td></tr>
+      <tr><td>L</td><td>11</td><td><code>wiki_url</code></td><td>Full URL or empty</td></tr>
+      <tr><td>M</td><td>12</td><td><code>genres</code></td><td>JSON array string, e.g. <code>'["Fiction","Science Fiction"]'</code>, or empty</td></tr>
+      <tr><td>N</td><td>13</td><td><code>container_title</code></td><td>Plain string or empty</td></tr>
+      <tr><td>O</td><td>14</td><td><code>series_name</code></td><td>Plain string or empty</td></tr>
+      <tr><td>P</td><td>15</td><td><code>series_order</code></td><td>Integer string or empty</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">Row 1 is a header row written by <code>initializeSheet()</code>. Data rows start at row 2. <code>_row</code> on the <code>Book</code> object = Sheets row number (data index + 2).</div>
+
+  <h2>Row ↔ Book mapping</h2>
+  <p><strong>rowToBook:</strong> <code>year = parseInt(row[3]) || undefined</code>; <code>status</code> defaults to <code>'want'</code> if empty; <code>genres = JSON.parse(row[12])</code> (undefined on parse failure); rows with falsy <code>id</code> or <code>title</code> are filtered out.</p>
+  <p><strong>bookToRow:</strong> <code>genres</code> → <code>JSON.stringify</code> if non-empty array, else empty string. All optional fields → value or empty string.</p>
+
+  <h2>Delete operation</h2>
+  <p>Requires two API calls: (1) GET <code>/{id}?fields=sheets.properties</code> to find the numeric <code>sheetId</code> of the "Books" tab; (2) POST <code>/{id}:batchUpdate</code> with <code>deleteDimension</code> (<code>startIndex: _row - 1</code>, <code>endIndex: _row</code>, dimension <code>ROWS</code>).</p>
+
+  <!-- ─── 7. Auth ─────────────────────────────────────────────────────────── -->
+  <h1 id="s7">7. Authentication &amp; First-Launch Setup</h1>
+
+  <h2>localStorage keys</h2>
+  <table>
+    <thead><tr><th>Key</th><th>Content</th></tr></thead>
+    <tbody>
+      <tr><td><code>books_user</code></td><td>JSON-serialized <code>UserProfile</code> (<code>{ email, name, picture }</code>)</td></tr>
+      <tr><td><code>books_token</code></td><td>Raw OAuth2 access token string</td></tr>
+      <tr><td><code>books_token_expiry</code></td><td>Unix timestamp (ms) when token expires</td></tr>
+      <tr><td><code>books_sheet_id</code></td><td>Google Sheets file ID</td></tr>
+      <tr><td><code>books_sheet_name</code></td><td>Google Sheets file name</td></tr>
+      <tr><td><code>gb_key</code></td><td>Google Books API key (optional, user-supplied)</td></tr>
+      <tr><td><code>google_client_id</code></td><td>OAuth client ID fallback (if env var not set)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>initAuth flow</h2>
+  <pre><code>initAuth(clientId)
+  │
+  ├─ Fast path: getUser() && loadPersistedToken()?
+  │    └─ yes → notify(true) → DONE  (no GIS call)
+  │
+  ├─ waitForGIS()  (polls window.google?.accounts?.oauth2 every 50ms)
+  │
+  ├─ getUser() exists?
+  │    ├─ yes → trySilentSignIn(prompt:'', login_hint: email)
+  │    │          ├─ success → notify(true)
+  │    │          └─ failure → notify(false) → LoginPage
+  │    └─ no  → notify(false) → LoginPage</code></pre>
+
+  <div class="callout"><strong>Token freshness:</strong> <code>isTokenFresh()</code> returns true when <code>accessToken !== null &amp;&amp; Date.now() &lt; tokenExpiresAt - 30_000</code>. The 30-second buffer prevents API calls with an about-to-expire token.</div>
+
+  <h2>AppInner startup sequence</h2>
+  <pre><code>onAuthChange listener registered
+initAuth(CLIENT_ID) called
+  │
+  ├─ isAuth = true →
+  │    findOrCreateBooksFile()
+  │      ├─ cached sheet ID in localStorage → return it immediately
+  │      ├─ Drive search for 'db_books' → found → cache and return
+  │      └─ not found → create new spreadsheet via Sheets API → cache and return
+  │    setPhase('ready')
+  │
+  └─ isAuth = false → setPhase('login')</code></pre>
+
+  <h2>OAuth scopes</h2>
+  <pre><code>email
+profile
+https://www.googleapis.com/auth/spreadsheets
+https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
+
+  <h2>Sign-out</h2>
+  <ol>
+    <li>Calls <code>window.google.accounts.oauth2.revoke(email, () =&gt; {})</code>.</li>
+    <li>Removes <code>books_token</code>, <code>books_token_expiry</code> from localStorage.</li>
+    <li>Removes <code>books_user</code> from localStorage.</li>
+    <li>Calls <code>notify(false)</code> → AppInner transitions to <code>'login'</code>.</li>
+  </ol>
+
+  <!-- ─── 8. API Layer ────────────────────────────────────────────────────── -->
+  <h1 id="s8">8. API Layer</h1>
+
+  <h2>Google Sheets API v4</h2>
+  <p>Base URL: <code>https://sheets.googleapis.com/v4/spreadsheets</code></p>
+  <table>
+    <thead><tr><th>Operation</th><th>Method</th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Read headers</td><td>GET</td><td><code>/{id}/values/Books!A1:A1</code></td><td>Check cell A1 = <code>'id'</code></td></tr>
+      <tr><td>Write headers</td><td>PUT</td><td><code>/{id}/values/Books!A1:P1?valueInputOption=RAW</code></td><td>First-run initialization</td></tr>
+      <tr><td>Read all books</td><td>GET</td><td><code>/{id}/values/Books!A:P</code></td><td>Returns all 16 columns</td></tr>
+      <tr><td>Append book</td><td>POST</td><td><code>/{id}/values/Books!A:P:append?valueInputOption=RAW&amp;insertDataOption=INSERT_ROWS</code></td><td>Response contains <code>updates.updatedRange</code></td></tr>
+      <tr><td>Update book</td><td>PUT</td><td><code>/{id}/values/Books!A{row}:P{row}?valueInputOption=RAW</code></td><td>Requires <code>_row</code></td></tr>
+      <tr><td>Get sheet metadata</td><td>GET</td><td><code>/{id}?fields=sheets.properties</code></td><td>Required for delete (numeric sheetId)</td></tr>
+      <tr><td>Delete row</td><td>POST</td><td><code>/{id}:batchUpdate</code></td><td><code>deleteDimension</code> request</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Google Books API v1</h2>
+  <p>Base URL: <code>https://www.googleapis.com/books/v1</code></p>
+  <table>
+    <thead><tr><th>Operation</th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Search</td><td><code>/volumes?q={query}&amp;maxResults=8[&amp;key={key}]</code></td><td>HTTP 429 → throws <code>GBRateLimitError</code></td></tr>
+      <tr><td>Get details</td><td><code>/volumes/{gbId}[?key={key}]</code></td><td>Returns <code>industryIdentifiers</code> + <code>categories</code></td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Categories split by <code>' / '</code> to produce individual genre tags.</li>
+    <li>Page URL: <code>https://books.google.com/books/edition/_/{id}?gbpv=0</code> (modern UI; <code>infoLink</code> from the API points to deprecated UI).</li>
+    <li>API key priority: <code>localStorage.gb_key</code> → <code>VITE_GOOGLE_BOOKS_API_KEY</code> env var → no key (100 req/day limit).</li>
+  </ul>
+
+  <h2>FantLab API</h2>
+  <p>Base URL: <code>https://api.fantlab.ru</code> (no auth required)</p>
+  <table>
+    <thead><tr><th>Operation</th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Search</td><td><code>/search-txt?q={query}</code></td><td>Returns <code>{ works: FLMiniWork[] }</code></td></tr>
+      <tr><td>Get genres</td><td><code>/work/{id}/extended</code></td><td>Returns <code>classificatory.genre_group</code></td></tr>
+    </tbody>
+  </table>
+  <p><strong>Type mapping (FL_TYPE_MAP):</strong> all keys lowercased.</p>
+  <table>
+    <thead><tr><th>Input (Russian or English)</th><th>BookType</th></tr></thead>
+    <tbody>
+      <tr><td>роман / novel</td><td>novel</td></tr>
+      <tr><td>рассказ / микрорассказ / story / shortstory</td><td>story</td></tr>
+      <tr><td>повесть / novella</td><td>novella</td></tr>
+      <tr><td>сборник / авторский сборник / антология / цикл / collection / anthology / cycle</td><td>collection</td></tr>
+      <tr><td>anything else</td><td>other</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Genre enrichment:</strong> fetches <code>/work/{id}/extended</code>, finds group matching <code>/жанр/i</code>, recursively collects items where <code>percent ≥ 0.1</code>, up to 8 results.</p>
+  <p><strong>Image URL fixing:</strong> <code>//cdn...</code> → <code>https://cdn...</code>; <code>/img...</code> → <code>https://fantlab.ru/img...</code>.</p>
+
+  <h2>Wikidata SPARQL</h2>
+  <p>Endpoint: <code>https://query.wikidata.org/sparql</code>. Matches <code>wdt:P212</code> (ISBN-13), requests <code>ruWiki</code> and <code>enWiki</code> optional bindings. Prefers Russian Wikipedia; falls back to English. Returns <code>null</code> on no match or network error.</p>
+
+  <!-- ─── 9. UI Screens ───────────────────────────────────────────────────── -->
+  <h1 id="s9">9. UI Screens</h1>
+
+  <h2 id="s9-1">LoginPage</h2>
+  <p><strong>File:</strong> <code>src/components/LoginPage.tsx</code><br>
+  <strong>Shown when:</strong> <code>phase === 'login'</code> in AppInner.</p>
+  <ul>
+    <li>Centered column, max-width 360px, min-height 100dvh.</li>
+    <li>Logo row: <code>icons/icon.svg</code> at 56×56px (border-radius 14px) + "Books" h1 (2rem, 800 weight, <code>--accent</code>) + tagline "Your personal book library".</li>
+    <li>Description: "Data stored in your Google Sheets." / "Access from any device, works offline."</li>
+    <li>"Sign in with Google" button: full width, <code>--accent</code> background, 1rem 600 weight, inline SVG Google logo.</li>
+    <li>On failure: "Sign in failed. Please try again." in <code>--danger</code>.</li>
+    <li>On success: GIS callback → <code>notify(true)</code> → AppInner phase becomes <code>'ready'</code>.</li>
+  </ul>
+
+  <h2 id="s9-2">BookGrid</h2>
+  <p><strong>File:</strong> <code>src/components/BookGrid.tsx</code><br>
+  <strong>Props:</strong> <code>alphaOpen: boolean</code>, <code>onAlphaClose: () =&gt; void</code></p>
+  <p>Data from <code>useBooks()</code>: <code>filtered</code>, <code>loading</code>, <code>error</code>.</p>
+  <ul>
+    <li><strong>Loading:</strong> centered spinner 36×36px.</li>
+    <li><strong>Error:</strong> centered error text in <code>--danger</code>.</li>
+    <li><strong>Empty:</strong> <code>menu_book</code> icon 48px + "No books found" + "Add your first book" button.</li>
+    <li><strong>List:</strong> renders <code>&lt;BookList&gt;</code> with <code>filtered</code>.</li>
+    <li><strong>FAB:</strong> fixed bottom-right 24px inset, 52×52px circle, <code>--accent</code>, shadow <code>0 4px 16px rgba(224,126,56,.4)</code>, <code>add</code> icon 26px.</li>
+    <li>Local state: <code>editing: Book | null</code>, <code>showAdd: boolean</code> — both open <code>AddBookModal</code>.</li>
+  </ul>
+
+  <h2 id="s9-3">BookList</h2>
+  <p><strong>File:</strong> <code>src/components/BookList.tsx</code><br>
+  <strong>Props:</strong> <code>books</code>, <code>onEdit</code>, <code>alphaOpen</code>, <code>onAlphaClose</code></p>
+  <p><strong>Sort:</strong> <code>title.localeCompare(title, 'ru')</code> then <code>author.localeCompare(author, 'ru')</code></p>
+  <p><strong>Grouping:</strong> first character of title — Cyrillic А–Я first, Latin A–Z second, other → <code>'#'</code>.</p>
+  <p><strong>Dividers:</strong> <code>id="alpha-{letter}"</code>, <code>scroll-margin-top: 64px</code>.</p>
+  <p><strong>Row layout:</strong> cover (90×135px) with status dot (16×16px, bottom-right) + info column (title 2-line clamp, author, year·type meta, series, container title, GB/FL/Wiki links).</p>
+  <p>Renders <code>AlphaPicker</code> when <code>alphaOpen === true</code>.</p>
+
+  <h2 id="s9-4">AddBookModal</h2>
+  <p><strong>File:</strong> <code>src/components/AddBookModal.tsx</code><br>
+  <strong>Props:</strong> <code>book?: Book</code> (edit mode), <code>onClose: () =&gt; void</code></p>
+
+  <h3>Search phase</h3>
+  <ul>
+    <li>Debounce: 400ms. Minimum query length: 2 characters.</li>
+    <li>Parallel: <code>Promise.allSettled([gbSearch(query), flSearch(query)])</code>.</li>
+    <li>Results merged by <code>mergeResults()</code> — see §16.</li>
+    <li>Thumbnail: 36×54px. Source badges: GB / FL.</li>
+    <li>Duplicate detection checks <code>gbIndex</code> → <code>flIndex</code> → <code>titleIndex</code>. If found, shows colored status badge.</li>
+    <li>"Add without search" link skips to form phase.</li>
+  </ul>
+
+  <h3>Form phase</h3>
+  <ul>
+    <li>Cover preview: 60×90px.</li>
+    <li>Title, Author, Year inputs.</li>
+    <li>Status chips: Want (amber <code>#f59e0b</code>), Reading (blue <code>#3b82f6</code>), Read (green <code>#10b981</code>).</li>
+    <li>Type chips: Роман / Рассказ / Повесть / Сборник / Прочее (clicking active type deselects).</li>
+    <li>Series name + series order (80px) in one row.</li>
+    <li>Container title input.</li>
+    <li>Sources: editable inputs for <code>gb_url</code>, <code>fl_url</code>, <code>wiki_url</code> + <code>open_in_new</code> icon link each.</li>
+    <li>Genres: read-only tag chips (0.775rem), shown only when <code>form.genres?.length &gt; 0</code>.</li>
+  </ul>
+
+  <h3>Background enrichment</h3>
+  <ol>
+    <li>FL genres (<code>getWorkGenres</code>) — sets <code>genres</code> only if not already present. Stale-guarded via <code>currentGbRef</code>.</li>
+    <li>GB details (<code>getBookDetails</code>) — <code>categories</code> override FL genres if present. Then <code>lookupByIsbn</code> for Wikipedia URL.</li>
+  </ol>
+
+  <h2 id="s9-5">StatsPage</h2>
+  <p><strong>File:</strong> <code>src/components/StatsPage.tsx</code></p>
+  <p>Six dimension selector chips: Status / Type / Author / Genre / Decade / Series.</p>
+  <p><strong>DonutChart:</strong> SVG <code>viewBox="0 0 280 280"</code> (240×240 on &lt;520px). Outer radius 125, inner radius 68. Center shows <code>uniqueCount</code> (unique books with data) — not sum of tags. Palette: 15 colors cycling; "Others" = <code>#94a3b8</code>; TOP_N = 15.</p>
+  <p>Legend: colored 12×12px square, label, count (right-aligned, min-width 36px).</p>
+
+  <h2 id="s9-6">SettingsModal</h2>
+  <p><strong>File:</strong> <code>src/components/SettingsModal.tsx</code> &nbsp;|&nbsp; max-width 440px</p>
+  <ul>
+    <li><strong>Spreadsheet picker:</strong> calls <code>listUserSheets()</code> (Drive API, ordered by modifiedTime desc), max-height 240px. Selecting a different sheet calls <code>setSheetFile()</code> then <code>load()</code>.</li>
+    <li><strong>GB API key:</strong> <code>type="password"</code> input; saved to <code>localStorage.gb_key</code> on Save; modal closes after 700ms.</li>
+  </ul>
+
+  <!-- ─── 10. Key Components ──────────────────────────────────────────────── -->
+  <h1 id="s10">10. Key Components</h1>
+
+  <h2 id="s10-1">Header</h2>
+  <p><strong>File:</strong> <code>src/components/Header.tsx</code><br>
+  <strong>Props:</strong> <code>onLogoClick: () =&gt; void</code>, <code>onStatsClick: () =&gt; void</code></p>
+  <p>Sticky, <code>top: 0</code>, <code>z-index: 10</code>, <code>backdrop-filter: blur(12px)</code>, background <code>rgba(var(--bg-rgb), .88)</code>.</p>
+  <table>
+    <thead><tr><th>Element</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr><td>Logo button</td><td><code>icons/icon.svg</code> 26×26px + "Books" text (hidden on ≤520px)</td></tr>
+      <tr><td>Search input</td><td>padding-left 36px, height 36px, font-size .875rem, <code>search</code> icon at left; placeholder "Search by title, author, series, genre…"</td></tr>
+      <tr><td>Filter button</td><td>36×36px, <code>tune</code> icon; accent when active; badge 15×15px (0.6rem) for count</td></tr>
+      <tr><td>Avatar button</td><td>36×36px circle; shows <code>user.picture</code> or first letter on <code>--accent</code> background</td></tr>
+      <tr><td>User menu</td><td>Dropdown, min-width 210px, border-radius 12px, <code>menuIn .12s</code> animation; items: Statistics / Settings / Sign out (red)</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="s10-2">FilterPanel</h2>
+  <p><strong>File:</strong> <code>src/components/FilterPanel.tsx</code> (no props; reads/writes BooksContext)</p>
+  <p>Two rows: Status (All/Want/Reading/Read) and Type (All/Роман/Рассказ/Повесть/Сборник/Прочее). Label width 68px. Active Want/Reading/Read chips use the amber/blue/green color scheme. "Clear all filters" (underline, hover → <code>--danger</code>) shown when <code>activeFilterCount &gt; 0</code>.</p>
+
+  <h2 id="s10-3">AlphaPicker</h2>
+  <p><strong>File:</strong> <code>src/components/AlphaPicker.tsx</code><br>
+  <strong>Props:</strong> <code>letters: string[]</code>, <code>onSelect: (letter: string) =&gt; void</code>, <code>onClose: () =&gt; void</code></p>
+  <p>Fixed overlay (<code>rgba(0,0,0,.55)</code>, backdrop-filter blur 2px, z-index 50). Inner card: max-width 360px, border-radius 16px, padding 16px. Grid: <code>repeat(7, 1fr)</code>, gap 5px. Each letter button: 46px height, 1.05rem 700-weight, <code>--accent</code> color. Click overlay → <code>onClose()</code>.</p>
+
+  <!-- ─── 11. Theme & Colors ──────────────────────────────────────────────── -->
+  <h1 id="s11">11. Theme &amp; Colors</h1>
+  <p>All CSS variables defined in <code>src/index.css</code>. Dark theme via <code>@media (prefers-color-scheme: dark)</code>.</p>
+
+  <table>
+    <thead><tr><th>Constant</th><th>Light</th><th>Dark</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>--bg</code></td><td>#F5F3F0</td><td>#0f0f0f</td><td>Page background</td></tr>
+      <tr><td><code>--bg-rgb</code></td><td>245, 243, 240</td><td>15, 15, 15</td><td>Header backdrop-filter rgba</td></tr>
+      <tr><td><code>--surface</code></td><td>#FFFFFF</td><td>#1a1a1a</td><td>Card / modal background</td></tr>
+      <tr><td><code>--surface-2</code></td><td>#F0EDE8</td><td>#242424</td><td>Input background, row hover</td></tr>
+      <tr><td><code>--surface-3</code></td><td>#E5E1DA</td><td>#2e2e2e</td><td>Row active, search result hover</td></tr>
+      <tr><td><code>--border</code></td><td>#DDD9D2</td><td>#333333</td><td>All borders, dividers</td></tr>
+      <tr><td><code>--text</code></td><td>#1C1C1C</td><td>#f0f0f0</td><td>Primary text</td></tr>
+      <tr><td><code>--text-2</code></td><td>#6B6B6B</td><td>#999999</td><td>Secondary text</td></tr>
+      <tr><td><code>--text-3</code></td><td>#A0A0A0</td><td>#555555</td><td>Placeholder, meta text</td></tr>
+      <tr><td><code>--accent</code></td><td>#E07E38</td><td>#E8935A</td><td>Primary brand color</td></tr>
+      <tr><td><code>--accent-hover</code></td><td>#C96E2F</td><td>#D4814A</td><td>Button hover state</td></tr>
+      <tr><td><code>--accent-light</code></td><td>rgba(224,126,56,.14)</td><td>rgba(232,147,90,.15)</td><td>Active chip backgrounds</td></tr>
+      <tr><td><code>--want</code></td><td>#f59e0b</td><td>—</td><td>Want status</td></tr>
+      <tr><td><code>--reading</code></td><td>#3b82f6</td><td>—</td><td>Reading status</td></tr>
+      <tr><td><code>--read</code></td><td>#10b981</td><td>—</td><td>Read status</td></tr>
+      <tr><td><code>--danger</code></td><td>#ef4444</td><td>—</td><td>Error text, sign-out</td></tr>
+      <tr><td><code>--radius</code></td><td>12px</td><td>—</td><td>Modal/button border-radius</td></tr>
+      <tr><td><code>--radius-sm</code></td><td>8px</td><td>—</td><td>Input/small element radius</td></tr>
+      <tr><td><code>--shadow</code></td><td>0 4px 20px rgba(0,0,0,.08)</td><td>0 4px 24px rgba(0,0,0,.55)</td><td>Modal shadow</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─── 12. PWA Manifest ────────────────────────────────────────────────── -->
+  <h1 id="s12">12. PWA Manifest</h1>
+  <p><strong>File:</strong> <code>public/manifest.json</code></p>
+
+  <table>
+    <thead><tr><th>Field</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code></td><td>"Books"</td></tr>
+      <tr><td><code>short_name</code></td><td>"Books"</td></tr>
+      <tr><td><code>description</code></td><td>"Personal book collection manager"</td></tr>
+      <tr><td><code>theme_color</code></td><td>#E07E38</td></tr>
+      <tr><td><code>background_color</code></td><td>#E07E38</td></tr>
+      <tr><td><code>display</code></td><td>standalone</td></tr>
+      <tr><td><code>start_url</code></td><td>/Books_PWA/</td></tr>
+      <tr><td><code>scope</code></td><td>/Books_PWA/</td></tr>
+      <tr><td><code>icons[0].src</code></td><td>icons/icon.svg (relative)</td></tr>
+      <tr><td><code>icons[0].sizes</code></td><td>any</td></tr>
+      <tr><td><code>icons[0].type</code></td><td>image/svg+xml</td></tr>
+      <tr><td><code>icons[0].purpose</code></td><td>any maskable</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Icon design</strong> (<code>public/icons/icon.svg</code>, viewBox 0 0 100 100): orange rounded rect background (rx=22, fill #E07E38) → solid white spine (x=19 y=16 w=9 h=68 rx=3.5) → stroke-only book cover (fill="none" stroke="white" strokeWidth=4.5, orange shows through) → four text-line rects in decreasing opacity.</div>
+
+  <!-- ─── 13. Loading & Empty States ─────────────────────────────────────── -->
+  <h1 id="s13">13. Loading &amp; Empty States</h1>
+
+  <table>
+    <thead><tr><th>Location</th><th>State</th><th>Content</th></tr></thead>
+    <tbody>
+      <tr><td>App.tsx</td><td>Splash (phase='loading')</td><td>icons/icon.svg 64×64px + 32×32px spinner (0.7s spin)</td></tr>
+      <tr><td>BookGrid</td><td>Loading</td><td>Centered 36×36px spinner (0.7s spin)</td></tr>
+      <tr><td>BookGrid</td><td>Error</td><td>Error string in <code>--danger</code>, centered, padding 20px</td></tr>
+      <tr><td>BookGrid</td><td>Empty list</td><td><code>menu_book</code> 48px (<code>--border</code>) + "No books found" + "Add your first book" accent button</td></tr>
+      <tr><td>AddBookModal</td><td>Search no results</td><td>"Nothing found" 0.85rem <code>--text-3</code>, centered</td></tr>
+      <tr><td>AddBookModal</td><td>Rate limited</td><td>Amber warning box: "Google Books daily limit reached — add an API key in Settings"</td></tr>
+      <tr><td>StatsPage</td><td>No data</td><td>"No data for this dimension" 0.9rem <code>--text-3</code>, padding 40px 0</td></tr>
+      <tr><td>SettingsModal</td><td>Sheet picker empty</td><td>"No Google Sheets found" in <code>--text-2</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─── 14. CI/CD ──────────────────────────────────────────────────────── -->
+  <h1 id="s14">14. CI/CD &amp; Build</h1>
+
+  <p><strong>Workflow:</strong> <code>.github/workflows/deploy.yml</code></p>
+  <p><strong>Triggers:</strong> push to <code>main</code>, <code>workflow_dispatch</code>. Concurrency group <code>pages</code>, cancel-in-progress.</p>
+
+  <table>
+    <thead><tr><th>Step</th><th>Action</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr><td>Checkout</td><td>actions/checkout@v4</td><td></td></tr>
+      <tr><td>Node.js</td><td>actions/setup-node@v4</td><td>Node 20, npm cache</td></tr>
+      <tr><td>Install</td><td><code>npm ci</code></td><td></td></tr>
+      <tr><td>Build</td><td><code>npm run build</code> (<code>tsc &amp;&amp; vite build</code>)</td><td>Secrets: <code>VITE_GOOGLE_CLIENT_ID</code>, <code>VITE_GOOGLE_BOOKS_API_KEY</code></td></tr>
+      <tr><td>Configure pages</td><td>actions/configure-pages@v4</td><td></td></tr>
+      <tr><td>Upload artifact</td><td>actions/upload-pages-artifact@v3</td><td>path: dist/</td></tr>
+      <tr><td>Deploy</td><td>actions/deploy-pages@v4</td><td>Outputs page_url</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><code>dist/</code> is in <code>.gitignore</code> and is never committed. The GitHub Actions runner builds from source on every push to <code>main</code>. No local build step required.</div>
+
+  <!-- ─── 15. First-Time Setup ────────────────────────────────────────────── -->
+  <h1 id="s15">15. First-Time Setup (New Developer)</h1>
+
+  <ol>
+    <li><strong>Clone and install:</strong>
+      <pre><code>git clone https://github.com/JuliaSivridi/Books_PWA.git
+cd Books_PWA
+npm install</code></pre>
+    </li>
+    <li><strong>Google Cloud Console — OAuth client:</strong>
+      <ul>
+        <li>Create project → APIs &amp; Services → OAuth consent screen (External).</li>
+        <li>Scopes: email, profile, spreadsheets, drive.metadata.readonly.</li>
+        <li>Credentials → Create OAuth 2.0 Client ID (Web application).</li>
+        <li>Authorized JavaScript origins: <code>http://localhost:5173</code> (dev) + <code>https://juliasivridi.github.io</code> (prod).</li>
+        <li>No redirect URIs needed (implicit token flow).</li>
+      </ul>
+    </li>
+    <li><strong>Enable APIs:</strong> Google Sheets API, Google Drive API v3. Optionally Google Books API + create API key.</li>
+    <li><strong>Local env file</strong> <code>.env.local</code> (gitignored):
+      <pre><code>VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+VITE_GOOGLE_BOOKS_API_KEY=your-books-api-key</code></pre>
+    </li>
+    <li><strong>Run locally:</strong>
+      <pre><code>npm run dev</code></pre>
+      Opens at <code>http://localhost:5173/Books_PWA/</code>.
+    </li>
+    <li><strong>GitHub Secrets</strong> (for CI/CD): Repository Settings → Secrets and variables → Actions → add <code>VITE_GOOGLE_CLIENT_ID</code> and <code>VITE_GOOGLE_BOOKS_API_KEY</code>. Set GitHub Pages source to "GitHub Actions".</li>
+    <li><strong>Deploy:</strong> push to <code>main</code> — GitHub Actions builds and deploys automatically.</li>
+  </ol>
+
+  <!-- ─── 16. Key Algorithms ──────────────────────────────────────────────── -->
+  <h1 id="s16">16. Key Algorithms</h1>
+
+  <h2>mergeResults — combining Google Books + FantLab results</h2>
+  <pre><code>function mergeResults(gbResults, flWorks):
+  merged = []
+  keyMap = Map&lt;string, SearchResult&gt;
+
+  for fl in flWorks:
+    key = normalizeKey(fl.authors[0].name, fl.work_name)
+    entry = { fl, gb: null }
+    merged.push(entry)
+    keyMap.set(key, entry)
+
+  for gb in gbResults:
+    key = normalizeKey(gb.volumeInfo.authors[0], gb.volumeInfo.title)
+    if keyMap.has(key):
+      keyMap.get(key).gb = gb   // enrich existing FL entry with GB data
+    else:
+      merged.push({ fl: null, gb })   // GB-only result
+
+  return merged
+  // Result: FL-first order; GB data merged in where title+author match</code></pre>
+
+  <h2>normalizeKey — fuzzy deduplication key</h2>
+  <pre><code>function normalizeKey(author, title):
+  key = author + '|' + title
+  key = key.toLowerCase()
+  key = key.replace('ё', 'е')            // Cyrillic ё/е equivalence
+  key = key.replace(/[^\wа-яa-z|]/g, '') // strip punctuation and spaces
+  return key.trim()</code></pre>
+
+  <h2>computeSlices — statistics with unique-book counting</h2>
+  <pre><code>function computeSlices(books, dim):
+  counts = {}
+  uniqueCount = 0
+
+  for book in books:
+    keys = getKeysForDim(book, dim)
+      // status → [STATUS_LABELS[book.status]]
+      // type   → book.type ? [TYPE_LABELS[book.type]] : []
+      // author → book.author ? [book.author] : []
+      // genre  → book.genres ?? []
+      // decade → book.year ? [floor(year/10)*10 + 's'] : []  (skips via continue if no year)
+      // series → book.series_name ? [book.series_name] : []
+
+    validKeys = keys.filter(k =&gt; !!k)
+    if validKeys.length &gt; 0: uniqueCount++
+    for k in validKeys: counts[k]++
+
+  sorted = sortDesc(entries(counts))
+  top15  = sorted.slice(0, 15)
+  rest   = sum(sorted.slice(15))
+
+  slices = top15.map((label, count, i) =&gt; ({ label, count, color: PALETTE[i] }))
+  if rest &gt; 0: slices.push({ label: 'Others', count: rest, color: '#94a3b8' })
+
+  return { slices, uniqueCount }
+  // uniqueCount = books with ≥1 value, used as center label in donut
+  // slices[].count may sum &gt; uniqueCount for multi-value dims (genre)</code></pre>
+
+  <h2>DonutChart sector path</h2>
+  <pre><code>function sectorPath(cx, cy, R, r, a1, a2):
+  // Annular sector: outer radius R=125, inner radius r=68
+  // Angles in radians from -π/2 (12 o'clock)
+  large = (a2 - a1 &gt; π) ? 1 : 0
+  return:
+    M {cx+R·cos(a1)} {cy+R·sin(a1)}
+    A R R 0 {large} 1 {cx+R·cos(a2)} {cy+R·sin(a2)}
+    L {cx+r·cos(a2)} {cy+r·sin(a2)}
+    A r r 0 {large} 0 {cx+r·cos(a1)} {cy+r·sin(a1)}
+    Z</code></pre>
+
+  <h2>Stale-request guard in AddBookModal</h2>
+  <pre><code>// currentGbRef holds the gb_id of the most recently selected search result.
+// Both async enrichment chains check it before committing state.
+
+selectResult(result):
+  currentGbRef.current = result.gb?.id ?? null
+
+  // FL genres (background, no await):
+  getWorkGenres(fl_work_id).then(genres =&gt;
+    if currentGbRef.current !== snapshotGbId: return  // user selected different book
+    if genres.length &amp;&amp; !form.genres?.length: setForm({ genres })
+  )
+
+  // GB details (foreground, with linksLoading spinner):
+  { isbn13, categories } = await getBookDetails(gb_id)
+  if currentGbRef.current !== gb_id: return   // stale
+  if categories.length: setForm({ genres: categories })  // GB overrides FL
+
+  wiki_url = await lookupByIsbn(isbn13)
+  if currentGbRef.current !== gb_id: return   // stale
+  setForm({ wiki_url })</code></pre>
+
+</div><!-- /content -->
+</body>
+</html>
