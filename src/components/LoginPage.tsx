@@ -1,29 +1,12 @@
 import { useState } from 'react'
-import { signIn, reconnect, getUser } from '../services/auth'
+import { signIn } from '../services/auth'
 import styles from './LoginPage.module.css'
 
 interface Props { error?: string }
 
 export default function LoginPage({ error: externalError }: Props) {
-  const savedUser = getUser()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(externalError ?? null)
-  const [forceNew, setForceNew] = useState(false)
-
-  const showReconnect = !!savedUser && !forceNew
-
-  async function handleReconnect() {
-    setLoading(true)
-    setError(null)
-    try {
-      const ok = await reconnect()
-      if (!ok) setError('Could not restore session — please sign in again.')
-    } catch {
-      setError('Sign in failed. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   async function handleSignIn() {
     setLoading(true)
@@ -56,37 +39,14 @@ export default function LoginPage({ error: externalError }: Props) {
 
         <div className={styles.actions}>
           {error && <p className={styles.error}>{error}</p>}
-
-          {showReconnect ? (
-            <>
-              <div className={styles.reconnectCard}>
-                {savedUser.picture && (
-                  <img src={savedUser.picture} alt="" className={styles.reconnectAvatar} referrerPolicy="no-referrer" />
-                )}
-                <span className={styles.reconnectName}>{savedUser.name}</span>
-              </div>
-              <button
-                className={styles.googleBtn}
-                onClick={handleReconnect}
-                disabled={loading}
-              >
-                {loading ? <span className={styles.spinner} /> : <GoogleIcon />}
-                {loading ? 'Signing in…' : `Continue as ${savedUser.name.split(' ')[0]}`}
-              </button>
-              <button className={styles.switchLink} onClick={() => setForceNew(true)}>
-                Use a different account
-              </button>
-            </>
-          ) : (
-            <button
-              className={styles.googleBtn}
-              onClick={handleSignIn}
-              disabled={loading}
-            >
-              {loading ? <span className={styles.spinner} /> : <GoogleIcon />}
-              {loading ? 'Signing in…' : 'Sign in with Google'}
-            </button>
-          )}
+          <button
+            className={styles.googleBtn}
+            onClick={handleSignIn}
+            disabled={loading}
+          >
+            {loading ? <span className={styles.spinner} /> : <GoogleIcon />}
+            {loading ? 'Signing in…' : 'Sign in with Google'}
+          </button>
         </div>
 
       </div>

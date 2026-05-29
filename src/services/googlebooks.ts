@@ -53,7 +53,8 @@ export async function getBookDetails(gbId: string): Promise<{ isbn13: string | n
     const data = await res.json() as GBVolume
     const identifiers = data.volumeInfo.industryIdentifiers ?? []
     const isbn13 = identifiers.find(i => i.type === 'ISBN_13')?.identifier ?? null
-    const categories = data.volumeInfo.categories ?? []
+    const rawCats = data.volumeInfo.categories ?? []
+    const categories = [...new Set(rawCats.flatMap(c => c.split(' / ').map(s => s.trim()).filter(Boolean)))]
     return { isbn13, categories }
   } catch {
     return { isbn13: null, categories: [] }

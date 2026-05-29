@@ -29,7 +29,7 @@ export interface FLSearchResult {
 
 export async function searchBooks(query: string): Promise<FLSearchResult> {
   try {
-    const res = await fetch(`${BASE}/searchmain?q=${encodeURIComponent(query)}&page=1`)
+    const res = await fetch(`${BASE}/search-work?q=${encodeURIComponent(query)}&page=1&onlymatches=1`)
     if (!res.ok) return { works: [] }
     return await res.json() as FLSearchResult
   } catch {
