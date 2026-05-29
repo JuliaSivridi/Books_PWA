@@ -24,7 +24,7 @@ export interface GBVolume {
 }
 
 export function getGBKey(): string {
-  return localStorage.getItem('gb_key') || ''
+  return localStorage.getItem('gb_key') || import.meta.env.VITE_GOOGLE_BOOKS_API_KEY || ''
 }
 
 export async function searchBooks(query: string): Promise<GBVolume[]> {
