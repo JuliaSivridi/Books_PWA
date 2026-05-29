@@ -2,3 +2,8 @@ node_modules
 dist
 .env
 .env.local
+
+# Personal data — not for the repo
+books.csv
+books_enriched.csv
+*_enriched.csv
