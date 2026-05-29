@@ -194,9 +194,15 @@ export default function AddBookModal({ book, onClose }: Props) {
       if (categories.length) setForm(f => ({ ...f, genres: categories }))  // GB overrides FL
 
       if (isbn13) {
-        const { wiki_url } = await lookupByIsbn(isbn13)
+        const { wiki_url, fl_work_id: wdFlId } = await lookupByIsbn(isbn13)
         if (currentGbRef.current !== gb_id) return
         if (wiki_url) setForm(f => ({ ...f, wiki_url }))
+        // P5699: fill fl_work_id / fl_url if the book was added via GB (no FL match yet)
+        if (wdFlId) setForm(f => f.fl_work_id ? f : {
+          ...f,
+          fl_work_id: wdFlId,
+          fl_url: `https://fantlab.ru/work${wdFlId}`,
+        })
       }
     } finally {
       if (currentGbRef.current === gb_id) setLinksLoading(false)

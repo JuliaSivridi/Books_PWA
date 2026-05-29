@@ -223,24 +223,95 @@ def search_google_books(title: str, author: str, api_key: str) -> dict:
     return result
 
 
-# ── Wikidata SPARQL ───────────────────────────────────────────────────────────
+# ── Wikidata ──────────────────────────────────────────────────────────────────
+# P212  = ISBN-13
+# P5699 = FantLab work ID  (same numeric ID as fantlab.ru/work{id})
 
-def lookup_wikidata_by_isbn(isbn13: str) -> str:
-    """Return Wikipedia URL (ru preferred, en fallback) or empty string."""
+def _parse_wikidata_bindings(bindings: list) -> dict:
+    """Extract wiki_url and fl_work_id from SPARQL result bindings."""
+    if not bindings:
+        return {}
+    b = bindings[0]
+    result: dict = {}
+    wiki = (b.get("ruWiki") or {}).get("value") or (b.get("enWiki") or {}).get("value") or ""
+    if wiki:
+        result["wiki_url"] = wiki
+    fl_id = (b.get("fantlabId") or {}).get("value") or ""
+    if fl_id:
+        result["fl_work_id"] = fl_id
+        result["fl_url"] = f"https://fantlab.ru/work{fl_id}"
+    return result
+
+
+def lookup_wikidata_by_isbn(isbn13: str) -> dict:
+    """
+    SPARQL lookup by ISBN-13.
+    Returns dict with any of: wiki_url, fl_work_id, fl_url.
+    """
     query = f"""
-SELECT ?ruWiki ?enWiki WHERE {{
+SELECT ?ruWiki ?enWiki ?fantlabId WHERE {{
   ?item wdt:P212 "{isbn13}" .
   OPTIONAL {{ ?ruWiki schema:about ?item; schema:isPartOf <https://ru.wikipedia.org/> }}
   OPTIONAL {{ ?enWiki schema:about ?item; schema:isPartOf <https://en.wikipedia.org/> }}
+  OPTIONAL {{ ?item wdt:P5699 ?fantlabId }}
 }} LIMIT 1"""
 
     url = f"{WD_SPARQL}?query={urllib.parse.quote(query)}&format=json"
     data = http_get(url, accept="application/sparql-results+json")
     bindings = ((data or {}).get("results") or {}).get("bindings") or []
-    if not bindings:
-        return ""
-    b = bindings[0]
-    return (b.get("ruWiki") or {}).get("value") or (b.get("enWiki") or {}).get("value") or ""
+    return _parse_wikidata_bindings(bindings)
+
+
+def search_wikidata_by_title(title: str) -> dict:
+    """
+    Fallback: search Wikidata by title when no ISBN is available.
+    Uses wbsearchentities, then fetches entity data for P5699 + sitelinks.
+    Returns dict with any of: wiki_url, fl_work_id, fl_url.
+    """
+    q = urllib.parse.quote(title)
+    search_url = (
+        f"https://www.wikidata.org/w/api.php"
+        f"?action=wbsearchentities&search={q}&language=ru"
+        f"&type=item&format=json&limit=5"
+    )
+    data = http_get(search_url)
+    if not data:
+        return {}
+
+    book_words = {"роман", "рассказ", "повесть", "книга", "novel", "story", "book"}
+    candidates = [
+        r for r in (data.get("search") or [])
+        if any(w in (r.get("description") or "").lower() for w in book_words)
+    ]
+    if not candidates:
+        return {}
+
+    # Fetch entity data for the best candidate
+    qid = candidates[0]["id"]
+    entity_data = http_get(
+        f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json"
+    )
+    if not entity_data:
+        return {}
+
+    e = (entity_data.get("entities") or {}).get(qid, {})
+    sitelinks = e.get("sitelinks") or {}
+    claims    = e.get("claims") or {}
+
+    result: dict = {}
+    ru_wiki = (sitelinks.get("ruwiki") or {}).get("url", "")
+    en_wiki = (sitelinks.get("enwiki") or {}).get("url", "")
+    if ru_wiki or en_wiki:
+        result["wiki_url"] = ru_wiki or en_wiki
+
+    fl_claims = claims.get("P5699") or []
+    if fl_claims:
+        fl_id = ((fl_claims[0].get("mainsnak") or {}).get("datavalue") or {}).get("value") or ""
+        if fl_id:
+            result["fl_work_id"] = str(fl_id)
+            result["fl_url"] = f"https://fantlab.ru/work{fl_id}"
+
+    return result
 
 
 # ── Checkpoint ────────────────────────────────────────────────────────────────
@@ -355,13 +426,27 @@ def main() -> None:
             if gb.get("_genres_gb") and row["genres"] == "[]":
                 row["genres"] = gb["_genres_gb"]
 
-            # ── Wikidata by ISBN-13 ───────────────────────────────────────
-            if not args.skip_wikidata and gb.get("_isbn13"):
-                wiki = lookup_wikidata_by_isbn(gb["_isbn13"])
-                time.sleep(args.delay)
-                if wiki:
-                    row["wiki_url"] = wiki
+            # ── Wikidata ──────────────────────────────────────────────────
+            if not args.skip_wikidata:
+                wd: dict = {}
+                if gb.get("_isbn13"):
+                    wd = lookup_wikidata_by_isbn(gb["_isbn13"])
+                    time.sleep(args.delay)
+                if not wd.get("wiki_url") and not row["wiki_url"]:
+                    # wiki_url still missing — try title search as fallback
+                    wd_title = search_wikidata_by_title(title)
+                    if wd_title:
+                        time.sleep(args.delay)
+                        wd = {**wd, **{k: v for k, v in wd_title.items() if v and not wd.get(k)}}
+
+                if wd.get("wiki_url"):
+                    row["wiki_url"] = wd["wiki_url"]
                     tags.append("Wiki")
+                # P5699: fill FL fields only if FantLab search missed this book
+                if wd.get("fl_work_id") and not row["fl_work_id"]:
+                    row["fl_work_id"] = wd["fl_work_id"]
+                    row["fl_url"]     = wd["fl_url"]
+                    tags.append("FL(WD)")
 
             # ── Defaults ─────────────────────────────────────────────────
             if not row["type"]:
