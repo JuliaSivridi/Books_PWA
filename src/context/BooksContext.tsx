@@ -5,13 +5,11 @@ import { fetchBooks, addBook, updateBook, deleteBook, initializeSheet } from '..
 export interface FiltersState {
   status: BookStatus | 'all'
   type:   BookType  | 'all'
-  author: string
 }
 
 const BLANK_FILTERS: FiltersState = {
   status: 'all',
   type:   'all',
-  author: '',
 }
 
 interface State {
@@ -123,9 +121,6 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     return state.books.filter(b => {
       if (filters.status !== 'all' && b.status !== filters.status) return false
       if (filters.type   !== 'all' && b.type   !== filters.type)   return false
-      if (filters.author) {
-        if (!b.author.toLowerCase().includes(filters.author.toLowerCase())) return false
-      }
       if (query) {
         const q = query.toLowerCase()
         const match =
@@ -145,7 +140,6 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     let n = 0
     if (f.status !== 'all') n++
     if (f.type   !== 'all') n++
-    if (f.author)            n++
     return n
   }, [state.filters])
 

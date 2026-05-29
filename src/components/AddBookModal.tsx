@@ -427,18 +427,6 @@ export default function AddBookModal({ book, onClose }: Props) {
                 placeholder="Part of collection (optional)"
               />
 
-              {/* Genres — read-only chips */}
-              {form.genres && form.genres.length > 0 && (
-                <div className={styles.section}>
-                  <p className={styles.label}>Genres</p>
-                  <div className={styles.tagChips}>
-                    {form.genres.map(g => (
-                      <span key={g} className={styles.tagChip}>{g}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Sources */}
               <div className={styles.section}>
                 <p className={styles.label}>
@@ -477,6 +465,18 @@ export default function AddBookModal({ book, onClose }: Props) {
                   })}
                 </div>
               </div>
+
+              {/* Genres — read-only chips */}
+              {form.genres && form.genres.length > 0 && (
+                <div className={styles.section}>
+                  <p className={styles.label}>Genres</p>
+                  <div className={styles.tagChips}>
+                    {form.genres.map(g => (
+                      <span key={g} className={styles.tagChip}>{g}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 

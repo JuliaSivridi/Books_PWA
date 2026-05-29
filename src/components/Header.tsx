@@ -38,7 +38,7 @@ export default function Header({ onLogoClick, onStatsClick }: Props) {
             <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
             <input
               type="search"
-              placeholder="Search by title, author, series…"
+              placeholder="Search by title, author, series, genre…"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />

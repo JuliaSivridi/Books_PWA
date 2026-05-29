@@ -56,17 +56,6 @@ export default function FilterPanel() {
         </div>
       </div>
 
-      <div className={styles.filterRow}>
-        <span className={styles.filterLabel}>Author</span>
-        <input
-          className={styles.kwInput}
-          type="search"
-          placeholder="Author name…"
-          value={filters.author}
-          onChange={e => setFilters({ author: e.target.value })}
-        />
-      </div>
-
       {activeFilterCount > 0 && (
         <button className={styles.clearBtn} onClick={clearFilters}>
           Clear all filters
