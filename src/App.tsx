@@ -17,13 +17,14 @@ type View  = 'list' | 'stats'
 
 function MainContent() {
   const { load } = useBooks()
-  const [view, setView] = useState<View>('list')
+  const [view,      setView]      = useState<View>('list')
+  const [alphaOpen, setAlphaOpen] = useState(false)
 
   useEffect(() => { load() }, [load])
 
   function handleLogoClick() {
     if (view === 'stats') setView('list')
-    else window.scrollTo({ top: 0, behavior: 'smooth' })
+    else setAlphaOpen(o => !o)
   }
 
   return (
@@ -33,7 +34,7 @@ function MainContent() {
         onStatsClick={() => setView('stats')}
       />
       {view === 'list'
-        ? <BookGrid />
+        ? <BookGrid alphaOpen={alphaOpen} onAlphaClose={() => setAlphaOpen(false)} />
         : <StatsPage onBack={() => setView('list')} />
       }
     </>

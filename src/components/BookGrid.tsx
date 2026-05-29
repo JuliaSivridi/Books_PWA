@@ -5,7 +5,9 @@ import AddBookModal from './AddBookModal'
 import type { Book } from '../types/book'
 import styles from './BookGrid.module.css'
 
-export default function BookGrid() {
+interface Props { alphaOpen: boolean; onAlphaClose: () => void }
+
+export default function BookGrid({ alphaOpen, onAlphaClose }: Props) {
   const { filtered, loading, error } = useBooks()
   const [editing, setEditing] = useState<Book | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -36,7 +38,7 @@ export default function BookGrid() {
       )}
 
       {filtered.length > 0 && (
-        <BookList books={filtered} onEdit={setEditing} />
+        <BookList books={filtered} onEdit={setEditing} alphaOpen={alphaOpen} onAlphaClose={onAlphaClose} />
       )}
 
       <button className={styles.fab} onClick={() => setShowAdd(true)} title="Add book">

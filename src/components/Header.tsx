@@ -29,7 +29,7 @@ export default function Header({ onLogoClick, onStatsClick }: Props) {
       <header className={styles.header}>
 
         <div className={styles.top}>
-          <button className={styles.logo} onClick={onLogoClick} title="Scroll to top">
+          <button className={styles.logo} onClick={onLogoClick} title="Jump to letter">
             <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} width={26} height={26} alt="" />
             <span>Books</span>
           </button>

@@ -3,6 +3,7 @@
   align-items: center;
   gap: 10px;
   padding: 14px 16px 6px;
+  scroll-margin-top: 64px;
 }
 
 .dividerLetter {
@@ -42,8 +43,8 @@
 }
 
 .cover {
-  width: 60px;
-  height: 90px;
+  width: 72px;
+  height: 108px;
   object-fit: cover;
   display: block;
   border-radius: 5px;
@@ -92,7 +93,7 @@
 }
 
 .author {
-  font-size: .9375rem;
+  font-size: 1rem;
   color: var(--text-2);
   white-space: nowrap;
   overflow: hidden;
@@ -102,7 +103,7 @@
 .meta {
   display: flex;
   align-items: center;
-  font-size: .875rem;
+  font-size: 1rem;
   color: var(--text-3);
 }
 
@@ -111,7 +112,7 @@
 }
 
 .series {
-  font-size: .8125rem;
+  font-size: .875rem;
   color: var(--text-3);
   white-space: nowrap;
   overflow: hidden;
@@ -119,7 +120,7 @@
 }
 
 .container {
-  font-size: .8125rem;
+  font-size: .875rem;
   color: var(--text-3);
   font-style: italic;
   white-space: nowrap;
@@ -137,13 +138,13 @@
 }
 
 .link {
-  font-size: .8125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-2);
   background: var(--surface-2);
   border: 1px solid var(--border);
-  padding: 2px 7px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 5px;
   white-space: nowrap;
   transition: color .1s, border-color .1s, background .1s;
   text-decoration: none;
