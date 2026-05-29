@@ -24,9 +24,11 @@ const OTHERS_COLOR = '#94a3b8'
 const TOP_N = 15
 
 interface Slice { label: string; count: number; color: string }
+interface SlicesResult { slices: Slice[]; uniqueCount: number }
 
-function computeSlices(books: Book[], dim: Dim): Slice[] {
+function computeSlices(books: Book[], dim: Dim): SlicesResult {
   const counts: Record<string, number> = {}
+  let uniqueCount = 0
 
   for (const b of books) {
     let keys: string[]
@@ -42,8 +44,10 @@ function computeSlices(books: Book[], dim: Dim): Slice[] {
       }
       case 'series': keys = b.series_name ? [b.series_name] : []; break
     }
-    for (const k of keys) {
-      if (k) counts[k] = (counts[k] ?? 0) + 1
+    const validKeys = keys.filter(k => !!k)
+    if (validKeys.length > 0) uniqueCount++
+    for (const k of validKeys) {
+      counts[k] = (counts[k] ?? 0) + 1
     }
   }
 
@@ -55,7 +59,7 @@ function computeSlices(books: Book[], dim: Dim): Slice[] {
     label, count, color: PALETTE[i % PALETTE.length],
   }))
   if (rest > 0) slices.push({ label: 'Others', count: rest, color: OTHERS_COLOR })
-  return slices
+  return { slices, uniqueCount }
 }
 
 function sectorPath(
@@ -75,7 +79,7 @@ function sectorPath(
   ].join(' ')
 }
 
-function DonutChart({ slices }: { slices: Slice[] }) {
+function DonutChart({ slices, uniqueCount }: { slices: Slice[]; uniqueCount: number }) {
   const total = slices.reduce((s, x) => s + x.count, 0)
   if (total === 0) return null
 
@@ -100,7 +104,7 @@ function DonutChart({ slices }: { slices: Slice[] }) {
           strokeWidth="2.5"
         />
       ))}
-      <text x={cx} y={cy - 10} className={styles.svgTotal}>{total}</text>
+      <text x={cx} y={cy - 10} className={styles.svgTotal}>{uniqueCount}</text>
       <text x={cx} y={cy + 16} className={styles.svgLabel}>books</text>
     </svg>
   )
@@ -112,7 +116,7 @@ export default function StatsPage({ onBack }: Props) {
   const { books } = useBooks()
   const [dim, setDim] = useState<Dim>('status')
 
-  const slices = useMemo(() => computeSlices(books, dim), [books, dim])
+  const { slices, uniqueCount } = useMemo(() => computeSlices(books, dim), [books, dim])
 
   return (
     <div className={styles.page}>
@@ -139,7 +143,7 @@ export default function StatsPage({ onBack }: Props) {
 
       {slices.length > 0 ? (
         <div className={styles.chartWrap}>
-          <DonutChart slices={slices} />
+          <DonutChart slices={slices} uniqueCount={uniqueCount} />
 
           <div className={styles.legend}>
             {slices.map((s, i) => (
