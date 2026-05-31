@@ -1,17 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Orange rounded background -->
   <rect width="100" height="100" rx="22" fill="#E07E38"/>
-
-  <!-- Spine (solid white strip — the binding) -->
-  <rect x="19" y="16" width="9" height="68" rx="3.5" fill="white"/>
-
-  <!-- Cover — outline only, orange shows through -->
-  <rect x="24" y="16" width="57" height="68" rx="5"
-        fill="none" stroke="white" stroke-width="4.5"/>
-
-  <!-- Text lines inside (solid white) -->
-  <rect x="34" y="32" width="34" height="5"   rx="2.5" fill="white"/>
-  <rect x="34" y="44" width="26" height="4"   rx="2"   fill="rgba(255,255,255,0.85)"/>
-  <rect x="34" y="55" width="30" height="4"   rx="2"   fill="rgba(255,255,255,0.85)"/>
-  <rect x="34" y="65" width="21" height="4"   rx="2"   fill="rgba(255,255,255,0.7)"/>
+  <g transform="translate(20, 20) scale(2.5)" fill="white">
+    <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0 3h4v2h-4zm0-6h8v2h-8z"/>
+  </g>
 </svg>
