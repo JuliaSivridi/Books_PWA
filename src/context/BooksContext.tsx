@@ -127,7 +127,6 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
           b.title.toLowerCase().includes(q) ||
           b.author.toLowerCase().includes(q) ||
           !!b.series_name?.toLowerCase().includes(q) ||
-          !!b.container_title?.toLowerCase().includes(q) ||
           !!(b.genres ?? []).some(g => g.toLowerCase().includes(q))
         if (!match) return false
       }

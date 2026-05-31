@@ -42,7 +42,7 @@ from typing import Optional
 COLUMNS = [
     "id", "title", "author", "year", "status", "type", "cover_url",
     "gb_id", "gb_url", "fl_work_id", "fl_url", "wiki_url",
-    "genres", "container_title", "series_name", "series_order",
+    "genres", "series_name", "series_order",
 ]
 
 # ── API base URLs ──────────────────────────────────────────────────────────────

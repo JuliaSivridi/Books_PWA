@@ -21,7 +21,6 @@ export interface Book {
   fl_url?:          string
   wiki_url?:        string
   genres?:          string[]
-  container_title?: string
   series_name?:     string
   series_order?:    number
   _row?:            number          // 1-based Google Sheets row (not saved)

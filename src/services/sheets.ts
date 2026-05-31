@@ -1,10 +1,10 @@
 /**
  * Google Sheets API v4 — CRUD for books.
  *
- * Columns A–P (16 total):
+ * Columns A–O (15 total):
  *   id | title | author | year | status | type |
  *   cover_url | gb_id | gb_url | fl_work_id | fl_url | wiki_url |
- *   genres | container_title | series_name | series_order
+ *   genres | series_name | series_order
  */
 
 import type { Book, BookStatus, BookType } from '../types/book'
@@ -16,7 +16,7 @@ const SHEET_NAME  = 'Books'
 const HEADERS = [
   'id', 'title', 'author', 'year', 'status', 'type',
   'cover_url', 'gb_id', 'gb_url', 'fl_work_id', 'fl_url', 'wiki_url',
-  'genres', 'container_title', 'series_name', 'series_order',
+  'genres', 'series_name', 'series_order',
 ]
 
 async function api(path: string, method: string, body?: object): Promise<Response> {
@@ -65,9 +65,8 @@ function rowToBook(row: string[], rowIndex: number): Book {
     fl_url:           row[10] || undefined,
     wiki_url:         row[11] || undefined,
     genres:           parseArr(row[12]),
-    container_title:  row[13] || undefined,
-    series_name:      row[14] || undefined,
-    series_order:     row[15] ? parseInt(row[15]) : undefined,
+    series_name:      row[13] || undefined,
+    series_order:     row[14] ? parseInt(row[14]) : undefined,
     _row: rowIndex + 2,
   }
 }
@@ -87,7 +86,6 @@ function bookToRow(b: Book): string[] {
     b.fl_url       || '',
     b.wiki_url     || '',
     b.genres?.length    ? JSON.stringify(b.genres) : '',
-    b.container_title   || '',
     b.series_name       || '',
     b.series_order != null ? String(b.series_order) : '',
   ]
@@ -99,7 +97,7 @@ export async function initializeSheet(): Promise<void> {
 
   if (!headData.values || headData.values[0]?.[0] !== 'id') {
     await api(
-      `/values/${SHEET_NAME}!A1:P1?valueInputOption=RAW`,
+      `/values/${SHEET_NAME}!A1:O1?valueInputOption=RAW`,
       'PUT',
       { values: [HEADERS] },
     )
@@ -107,7 +105,7 @@ export async function initializeSheet(): Promise<void> {
 }
 
 export async function fetchBooks(): Promise<Book[]> {
-  const res  = await api(`/values/${SHEET_NAME}!A:P`, 'GET')
+  const res  = await api(`/values/${SHEET_NAME}!A:O`, 'GET')
   const data = await res.json()
   if (!data.values || data.values.length <= 1) return []
   return (data.values as string[][])
@@ -118,7 +116,7 @@ export async function fetchBooks(): Promise<Book[]> {
 
 export async function addBook(book: Book): Promise<Book> {
   const res  = await api(
-    `/values/${SHEET_NAME}!A:P:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    `/values/${SHEET_NAME}!A:O:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
     'POST',
     { values: [bookToRow(book)] },
   )
@@ -131,7 +129,7 @@ export async function addBook(book: Book): Promise<Book> {
 export async function updateBook(book: Book): Promise<void> {
   if (!book._row) throw new Error('Row number unknown')
   await api(
-    `/values/${SHEET_NAME}!A${book._row}:P${book._row}?valueInputOption=RAW`,
+    `/values/${SHEET_NAME}!A${book._row}:O${book._row}?valueInputOption=RAW`,
     'PUT',
     { values: [bookToRow(book)] },
   )

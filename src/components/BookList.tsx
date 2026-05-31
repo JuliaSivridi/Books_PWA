@@ -120,10 +120,6 @@ export default function BookList({ books, onEdit, alphaOpen, onAlphaClose }: Pro
                   </span>
                 )}
 
-                {b.container_title && (
-                  <span className={styles.container}>из: {b.container_title}</span>
-                )}
-
                 {(b.gb_url || b.fl_url || b.wiki_url) && (
                   <div className={styles.links} onClick={e => e.stopPropagation()}>
                     {b.gb_url   && <a href={b.gb_url}   target="_blank" rel="noreferrer" className={styles.link}>GB</a>}

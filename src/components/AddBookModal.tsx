@@ -24,7 +24,7 @@ const BLANK: FormData = {
   year: undefined, type: undefined,
   cover_url: undefined, gb_id: undefined, gb_url: undefined,
   fl_work_id: undefined, fl_url: undefined, wiki_url: undefined,
-  genres: undefined, container_title: undefined,
+  genres: undefined,
   series_name: undefined, series_order: undefined,
 }
 
@@ -168,7 +168,6 @@ export default function AddBookModal({ book, onClose }: Props) {
       fl_work_id, fl_url,
       wiki_url: undefined,
       genres: undefined,
-      container_title: undefined,
       series_name: undefined,
       series_order: undefined,
     })
@@ -425,13 +424,6 @@ export default function AddBookModal({ book, onClose }: Props) {
                   className={styles.seriesOrder}
                 />
               </div>
-
-              {/* Container title */}
-              <input
-                value={form.container_title ?? ''}
-                onChange={e => set('container_title', e.target.value || undefined)}
-                placeholder="Part of collection (optional)"
-              />
 
               {/* Sources */}
               <div className={styles.section}>

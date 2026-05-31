@@ -116,9 +116,8 @@ All data lives in the user's **db_books** Google Spreadsheet, found or created a
 | K | fl_url | FantLab work page URL |
 | L | wiki_url | Wikipedia article (Russian preferred, English fallback) |
 | M | genres | JSON array — e.g. `["Fiction","Science Fiction"]` |
-| N | container_title | Anthology or collection this work appears in |
-| O | series_name | Series name |
-| P | series_order | Position in series |
+| N | series_name | Series name |
+| O | series_order | Position in series |
 
 ---
 
