@@ -1,5 +1,15 @@
 # Books
 
+[![Live PWA](https://img.shields.io/badge/Books_PWA-Live_PWA-E07E38?style=for-the-badge)](https://juliasivridi.github.io/Books_PWA/)
+
+![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite_5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Google Sheets](https://img.shields.io/badge/Google_Sheets_API-34A853?style=for-the-badge&logo=googlesheets&logoColor=white)
+![Google OAuth](https://img.shields.io/badge/Google_OAuth_2.0-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=for-the-badge&logo=githubpages&logoColor=white)](https://juliasivridi.github.io/Books_PWA/)
+
 A personal book library tracker built as a **Progressive Web App**. Runs in any browser and installs on Android/iOS/desktop as a standalone app. No backend — Google Sheets is the database.
 
 **Live:** [juliasivridi.github.io/Books_PWA](https://juliasivridi.github.io/Books_PWA/)
@@ -23,14 +33,14 @@ A personal book library tracker built as a **Progressive Web App**. Runs in any 
 
 | Layer | Technology |
 |---|---|
-| Framework | React 18 + TypeScript 5 |
-| Build | Vite 5 + SWC |
-| Styling | CSS Modules + CSS custom properties (light / dark theme) |
-| Database | Google Sheets API v4 |
-| Auth | Google Identity Services (OAuth 2.0) |
-| Book data | Google Books API v1 + FantLab API |
-| Wikipedia lookup | Wikidata SPARQL — ISBN-13 (P212) + Wikipedia sitelinks |
-| Hosting | GitHub Pages (deployed via GitHub Actions) |
+| ⚛️ Framework | React 18 + TypeScript 5 |
+| ⚡ Build | Vite 5 + SWC |
+| 🎨 Styling | CSS Modules + CSS custom properties (light / dark theme) |
+| 🗄️ Database | Google Sheets API v4 |
+| 🔐 Auth | Google Identity Services (OAuth 2.0) |
+| 📚 Book data | Google Books API v1 + FantLab API |
+| 🔍 Wikipedia lookup | Wikidata SPARQL — ISBN-13 (P212) + Wikipedia sitelinks |
+| 🚀 Hosting | GitHub Pages (deployed via GitHub Actions) |
 
 ---
 
