@@ -21,8 +21,9 @@ A personal book library tracker built as a **Progressive Web App**. Runs in any 
 - **Smart Add** — type a title, pick from parallel Google Books + FantLab results, and all fields auto-fill: author, year, type, cover, genres, and source links
 - **Auto-enriched links** — Wikipedia article fetched automatically via Wikidata SPARQL (ISBN-13 → P212); Google Books and FantLab links populated from search results
 - **Duplicate detection** — books already in your library show a ✓ Want / ✓ Reading / ✓ Read badge directly in search results; tapping one opens the edit form instead of adding a duplicate
-- **Alphabetical navigation** — sorted list with letter dividers; tap the logo to open an alphabet popup and jump to any letter instantly
-- **Filter panel** — filter by reading status (Want / Reading / Read) and book type (Роман / Рассказ / Повесть / Сборник); search bar covers title, author, series, and genre simultaneously
+- **Three sort views** — switch between Books (by title), Authors (by author), and Series (grouped by series name, sorted by volume number); live counts on each tab
+- **Alphabetical navigation** — tap the logo to open a letter picker and jump instantly; works across all three sort views
+- **Filter panel** — filter by status, type, and genre (multi-select, OR logic); search bar covers title, author, series, and genre simultaneously
 - **Statistics** — donut charts across six dimensions: status, type, author, genre, decade, series
 - **Light / dark theme** — follows OS preference automatically
 - **PWA** — installable on Android, iOS, and desktop; works as a standalone app with its own icon

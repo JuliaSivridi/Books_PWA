@@ -428,7 +428,6 @@ Component re-render</code></pre>
       <tr><td><code>fl_url</code></td><td>string</td><td>no</td><td>FantLab work page URL</td></tr>
       <tr><td><code>wiki_url</code></td><td>string</td><td>no</td><td>Wikipedia article URL</td></tr>
       <tr><td><code>genres</code></td><td>string[]</td><td>no</td><td>Genre tags (from GB categories or FL classificatory)</td></tr>
-      <tr><td><code>container_title</code></td><td>string</td><td>no</td><td>Anthology or collection this work appears in</td></tr>
       <tr><td><code>series_name</code></td><td>string</td><td>no</td><td>Series name</td></tr>
       <tr><td><code>series_order</code></td><td>number</td><td>no</td><td>Position in series</td></tr>
       <tr><td><code>_row</code></td><td>number</td><td>no</td><td><strong>Runtime only.</strong> 1-based Google Sheets row number. Never written to the sheet.</td></tr>
@@ -462,7 +461,7 @@ Component re-render</code></pre>
 
   <p><strong>Drive file name:</strong> <code>db_books</code> &nbsp;|&nbsp; <strong>MIME type:</strong> <code>application/vnd.google-apps.spreadsheet</code> &nbsp;|&nbsp; <strong>Sheet tab:</strong> <code>Books</code></p>
 
-  <h2>Column layout (A–P)</h2>
+  <h2>Column layout (A–O)</h2>
   <table>
     <thead><tr><th>Column</th><th>Index</th><th>Field</th><th>Value format</th></tr></thead>
     <tbody>
@@ -479,9 +478,8 @@ Component re-render</code></pre>
       <tr><td>K</td><td>10</td><td><code>fl_url</code></td><td>Full URL or empty</td></tr>
       <tr><td>L</td><td>11</td><td><code>wiki_url</code></td><td>Full URL or empty</td></tr>
       <tr><td>M</td><td>12</td><td><code>genres</code></td><td>JSON array string, e.g. <code>'["Fiction","Science Fiction"]'</code>, or empty</td></tr>
-      <tr><td>N</td><td>13</td><td><code>container_title</code></td><td>Plain string or empty</td></tr>
-      <tr><td>O</td><td>14</td><td><code>series_name</code></td><td>Plain string or empty</td></tr>
-      <tr><td>P</td><td>15</td><td><code>series_order</code></td><td>Integer string or empty</td></tr>
+      <tr><td>N</td><td>13</td><td><code>series_name</code></td><td>Plain string or empty</td></tr>
+      <tr><td>O</td><td>14</td><td><code>series_order</code></td><td>Integer string or empty</td></tr>
     </tbody>
   </table>
 
@@ -563,10 +561,10 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     <thead><tr><th>Operation</th><th>Method</th><th>Path</th><th>Notes</th></tr></thead>
     <tbody>
       <tr><td>Read headers</td><td>GET</td><td><code>/{id}/values/Books!A1:A1</code></td><td>Check cell A1 = <code>'id'</code></td></tr>
-      <tr><td>Write headers</td><td>PUT</td><td><code>/{id}/values/Books!A1:P1?valueInputOption=RAW</code></td><td>First-run initialization</td></tr>
-      <tr><td>Read all books</td><td>GET</td><td><code>/{id}/values/Books!A:P</code></td><td>Returns all 16 columns</td></tr>
-      <tr><td>Append book</td><td>POST</td><td><code>/{id}/values/Books!A:P:append?valueInputOption=RAW&amp;insertDataOption=INSERT_ROWS</code></td><td>Response contains <code>updates.updatedRange</code></td></tr>
-      <tr><td>Update book</td><td>PUT</td><td><code>/{id}/values/Books!A{row}:P{row}?valueInputOption=RAW</code></td><td>Requires <code>_row</code></td></tr>
+      <tr><td>Write headers</td><td>PUT</td><td><code>/{id}/values/Books!A1:O1?valueInputOption=RAW</code></td><td>First-run initialization</td></tr>
+      <tr><td>Read all books</td><td>GET</td><td><code>/{id}/values/Books!A:O</code></td><td>Returns all 15 columns</td></tr>
+      <tr><td>Append book</td><td>POST</td><td><code>/{id}/values/Books!A:O:append?valueInputOption=RAW&amp;insertDataOption=INSERT_ROWS</code></td><td>Response contains <code>updates.updatedRange</code></td></tr>
+      <tr><td>Update book</td><td>PUT</td><td><code>/{id}/values/Books!A{row}:O{row}?valueInputOption=RAW</code></td><td>Requires <code>_row</code></td></tr>
       <tr><td>Get sheet metadata</td><td>GET</td><td><code>/{id}?fields=sheets.properties</code></td><td>Required for delete (numeric sheetId)</td></tr>
       <tr><td>Delete row</td><td>POST</td><td><code>/{id}:batchUpdate</code></td><td><code>deleteDimension</code> request</td></tr>
     </tbody>
@@ -611,7 +609,8 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   <p><strong>Image URL fixing:</strong> <code>//cdn...</code> → <code>https://cdn...</code>; <code>/img...</code> → <code>https://fantlab.ru/img...</code>.</p>
 
   <h2>Wikidata SPARQL</h2>
-  <p>Endpoint: <code>https://query.wikidata.org/sparql</code>. Matches <code>wdt:P212</code> (ISBN-13), requests <code>ruWiki</code> and <code>enWiki</code> optional bindings. Prefers Russian Wikipedia; falls back to English. Returns <code>null</code> on no match or network error.</p>
+  <p>Endpoint: <code>https://query.wikidata.org/sparql</code>. Matches <code>wdt:P212</code> (ISBN-13). Optional bindings: <code>ruWiki</code>, <code>enWiki</code> (sitelinks) and <code>fantlabId</code> (<code>wdt:P5699</code> — FantLab work ID). Prefers Russian Wikipedia; falls back to English. Returns <code>{ wiki_url, fl_work_id }</code> — both may be null on no match or network error.</p>
+  <p>In <code>AddBookModal</code>, if <code>fl_work_id</code> is returned and the book has no FantLab data (added via Google Books), <code>fl_work_id</code> and <code>fl_url</code> are auto-filled from the Wikidata result.</p>
 
   <!-- ─── 9. UI Screens ───────────────────────────────────────────────────── -->
   <h1 id="s9">9. UI Screens</h1>
@@ -630,7 +629,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
 
   <h2 id="s9-2">BookGrid</h2>
   <p><strong>File:</strong> <code>src/components/BookGrid.tsx</code><br>
-  <strong>Props:</strong> <code>alphaOpen: boolean</code>, <code>onAlphaClose: () =&gt; void</code></p>
+  <strong>Props:</strong> <code>alphaOpen: boolean</code>, <code>onAlphaClose: () =&gt; void</code>, <code>sortMode: SortMode</code></p>
   <p>Data from <code>useBooks()</code>: <code>filtered</code>, <code>loading</code>, <code>error</code>.</p>
   <ul>
     <li><strong>Loading:</strong> centered spinner 36×36px.</li>
@@ -643,11 +642,15 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
 
   <h2 id="s9-3">BookList</h2>
   <p><strong>File:</strong> <code>src/components/BookList.tsx</code><br>
-  <strong>Props:</strong> <code>books</code>, <code>onEdit</code>, <code>alphaOpen</code>, <code>onAlphaClose</code></p>
-  <p><strong>Sort:</strong> <code>title.localeCompare(title, 'ru')</code> then <code>author.localeCompare(author, 'ru')</code></p>
-  <p><strong>Grouping:</strong> first character of title — Cyrillic А–Я first, Latin A–Z second, other → <code>'#'</code>.</p>
-  <p><strong>Dividers:</strong> <code>id="alpha-{letter}"</code>, <code>scroll-margin-top: 64px</code>.</p>
-  <p><strong>Row layout:</strong> cover (90×135px) with status dot (16×16px, bottom-right) + info column (title 2-line clamp, author, year·type meta, series, container title, GB/FL/Wiki links).</p>
+  <strong>Props:</strong> <code>books</code>, <code>onEdit</code>, <code>alphaOpen</code>, <code>onAlphaClose</code>, <code>sortMode: SortMode</code></p>
+  <p><strong>SortMode</strong> = <code>'title' | 'author' | 'series'</code></p>
+  <ul>
+    <li><strong>Title mode:</strong> sort by title then author; group by first letter of title; divider shows letter.</li>
+    <li><strong>Author mode:</strong> sort by author then title; group by first letter of author; divider shows letter.</li>
+    <li><strong>Series mode:</strong> group books by <code>series_name</code> into a Map; series sorted alphabetically; books within sorted by <code>series_order</code> then title. Divider shows <strong>full series name</strong> + book count. <code>alphaAnchor</code> flag marks the first group of each starting letter — only that divider gets <code>id="alpha-{letter}"</code>. Books without <code>series_name</code> are omitted. Row hides redundant series name; shows <code>#N</code> in meta instead.</li>
+  </ul>
+  <p><strong>Dividers:</strong> <code>scroll-margin-top: 116px</code> (accounts for sticky header + tab row).</p>
+  <p><strong>Row layout:</strong> cover (90×135px) with status dot (16×16px, bottom-right) + info column (title 2-line clamp, author, meta line, series line in title/author modes, GB/FL/Wiki links).</p>
   <p>Renders <code>AlphaPicker</code> when <code>alphaOpen === true</code>.</p>
 
   <h2 id="s9-4">AddBookModal</h2>
@@ -671,7 +674,6 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     <li>Status chips: Want (amber <code>#f59e0b</code>), Reading (blue <code>#3b82f6</code>), Read (green <code>#10b981</code>).</li>
     <li>Type chips: Роман / Рассказ / Повесть / Сборник / Прочее (clicking active type deselects).</li>
     <li>Series name + series order (80px) in one row.</li>
-    <li>Container title input.</li>
     <li>Sources: editable inputs for <code>gb_url</code>, <code>fl_url</code>, <code>wiki_url</code> + <code>open_in_new</code> icon link each.</li>
     <li>Genres: read-only tag chips (0.775rem), shown only when <code>form.genres?.length &gt; 0</code>.</li>
   </ul>
@@ -679,7 +681,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   <h3>Background enrichment</h3>
   <ol>
     <li>FL genres (<code>getWorkGenres</code>) — sets <code>genres</code> only if not already present. Stale-guarded via <code>currentGbRef</code>.</li>
-    <li>GB details (<code>getBookDetails</code>) — <code>categories</code> override FL genres if present. Then <code>lookupByIsbn</code> for Wikipedia URL.</li>
+    <li>GB details (<code>getBookDetails</code>) — <code>categories</code> override FL genres if present. Then <code>lookupByIsbn(isbn13)</code> returns <code>{ wiki_url, fl_work_id }</code>: sets Wikipedia URL, and if book has no FL data yet, auto-fills <code>fl_work_id</code>/<code>fl_url</code> from Wikidata P5699.</li>
   </ol>
 
   <h2 id="s9-5">StatsPage</h2>
@@ -700,22 +702,29 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
 
   <h2 id="s10-1">Header</h2>
   <p><strong>File:</strong> <code>src/components/Header.tsx</code><br>
-  <strong>Props:</strong> <code>onLogoClick: () =&gt; void</code>, <code>onStatsClick: () =&gt; void</code></p>
+  <strong>Props:</strong> <code>onLogoClick</code>, <code>onStatsClick</code>, <code>sortMode: SortMode</code>, <code>onSortModeChange: (m: SortMode) =&gt; void</code>, <code>inListView: boolean</code></p>
   <p>Sticky, <code>top: 0</code>, <code>z-index: 10</code>, <code>backdrop-filter: blur(12px)</code>, background <code>rgba(var(--bg-rgb), .88)</code>.</p>
   <table>
     <thead><tr><th>Element</th><th>Details</th></tr></thead>
     <tbody>
       <tr><td>Logo button</td><td><code>icons/icon.svg</code> 26×26px + "Books" text (hidden on ≤520px)</td></tr>
-      <tr><td>Search input</td><td>padding-left 36px, height 36px, font-size .875rem, <code>search</code> icon at left; placeholder "Search by title, author, series, genre…"</td></tr>
-      <tr><td>Filter button</td><td>36×36px, <code>tune</code> icon; accent when active; badge 15×15px (0.6rem) for count</td></tr>
+      <tr><td>Search input</td><td>padding-left 36px, height 36px, font-size 1rem, <code>search</code> icon at left</td></tr>
+      <tr><td>Filter button</td><td>36×36px, <code>tune</code> icon; accent when active; badge 15×15px for count</td></tr>
       <tr><td>Avatar button</td><td>36×36px circle; shows <code>user.picture</code> or first letter on <code>--accent</code> background</td></tr>
       <tr><td>User menu</td><td>Dropdown, min-width 210px, border-radius 12px, <code>menuIn .12s</code> animation; items: Statistics / Settings / Sign out (red)</td></tr>
+      <tr><td><strong>Tab row</strong></td><td>Shown when <code>inListView === true</code>. Segmented control: <strong>Books N | Authors N | Series N</strong>. Counts from <code>filtered</code>: total / unique authors / unique series names. Active tab: white pill on <code>--surface-2</code>.</td></tr>
     </tbody>
   </table>
 
   <h2 id="s10-2">FilterPanel</h2>
   <p><strong>File:</strong> <code>src/components/FilterPanel.tsx</code> (no props; reads/writes BooksContext)</p>
-  <p>Two rows: Status (All/Want/Reading/Read) and Type (All/Роман/Рассказ/Повесть/Сборник/Прочее). Label width 68px. Active Want/Reading/Read chips use the amber/blue/green color scheme. "Clear all filters" (underline, hover → <code>--danger</code>) shown when <code>activeFilterCount &gt; 0</code>.</p>
+  <p>Three rows: Status, Type, Genre. Labels sit above chips (column layout). Panel has <code>max-height: calc(100svh - 130px); overflow-y: auto</code>.</p>
+  <ul>
+    <li><strong>Status:</strong> All / Want / Reading / Read — single-select; active chips use amber/blue/green scheme.</li>
+    <li><strong>Type:</strong> All / Роман / Рассказ / Повесть / Сборник / Прочее — single-select; active uses <code>--accent</code>.</li>
+    <li><strong>Genre:</strong> all unique genres from <code>allGenres</code> (BooksContext). Multi-select with OR logic. Chip area: <code>max-height: 148px; overflow-y: auto</code> (~3 rows visible). <code>activeFilterCount</code> +1 when any genres selected.</li>
+  </ul>
+  <p>"Clear all filters" (underline, hover → <code>--danger</code>) shown when <code>activeFilterCount &gt; 0</code>.</p>
 
   <h2 id="s10-3">AlphaPicker</h2>
   <p><strong>File:</strong> <code>src/components/AlphaPicker.tsx</code><br>
@@ -773,7 +782,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     </tbody>
   </table>
 
-  <div class="note"><strong>Icon design</strong> (<code>public/icons/icon.svg</code>, viewBox 0 0 100 100): orange rounded rect background (rx=22, fill #E07E38) → solid white spine (x=19 y=16 w=9 h=68 rx=3.5) → stroke-only book cover (fill="none" stroke="white" strokeWidth=4.5, orange shows through) → four text-line rects in decreasing opacity.</div>
+  <div class="note"><strong>Icon design</strong> (<code>public/icons/icon.svg</code>, viewBox 0 0 100 100): orange rounded rect background (rx=22, fill #E07E38) → white <code>LibraryBooksOutlined</code> MUI icon, scaled via <code>transform="translate(10,10) scale(3.333)"</code> (80×80px effective, 10px padding on all sides). MUI path: two stacked document rectangles with back-shadow offset and three text lines, all <code>fill="white"</code>.</div>
 
   <!-- ─── 13. Loading & Empty States ─────────────────────────────────────── -->
   <h1 id="s13">13. Loading &amp; Empty States</h1>

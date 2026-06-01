@@ -203,7 +203,6 @@ Defined in `src/types/book.ts`.
 | `fl_url` | `string` | no | FantLab work page URL |
 | `wiki_url` | `string` | no | Wikipedia article URL |
 | `genres` | `string[]` | no | Genre tags (from GB categories or FL classificatory) |
-| `container_title` | `string` | no | Anthology or collection this work appears in |
 | `series_name` | `string` | no | Series name |
 | `series_order` | `number` | no | Position in series |
 | `_row` | `number` | no | **Runtime only.** 1-based Google Sheets row number. Never written to the sheet. |
@@ -236,7 +235,7 @@ Defined in `src/types/book.ts`.
 - Drive MIME type: `application/vnd.google-apps.spreadsheet`  
 - Sheet (tab) name: `Books`
 
-### Column layout (A–P)
+### Column layout (A–O)
 
 | Column | Index | Field | Value format |
 |---|---|---|---|
@@ -253,9 +252,8 @@ Defined in `src/types/book.ts`.
 | K | 10 | `fl_url` | Full URL or empty |
 | L | 11 | `wiki_url` | Full URL or empty |
 | M | 12 | `genres` | JSON array string, e.g. `'["Fiction","Science Fiction"]'`, or empty |
-| N | 13 | `container_title` | Plain string or empty |
-| O | 14 | `series_name` | Plain string or empty |
-| P | 15 | `series_order` | Integer string or empty |
+| N | 13 | `series_name` | Plain string or empty |
+| O | 14 | `series_order` | Integer string or empty |
 
 Row 1 is a header row with field names `id, title, author, ...` written by `initializeSheet()`. Data rows start at row 2.
 
@@ -266,6 +264,7 @@ Row 1 is a header row with field names `id, title, author, ...` written by `init
 - `year = parseInt(row[3]) || undefined` — empty string → undefined
 - `status = (row[4] as BookStatus) || 'want'` — defaults to `'want'` if missing
 - `genres = parseArr(row[12])` — tries `JSON.parse`, returns undefined on failure
+- `series_name = row[13]`, `series_order = parseInt(row[14])`
 - Rows where `id` or `title` are falsy are filtered out after mapping
 
 **bookToRow** (sheets.ts `bookToRow(b)`):
@@ -275,7 +274,7 @@ Row 1 is a header row with field names `id, title, author, ...` written by `init
 
 ### Initialization
 
-`initializeSheet()` reads `Books!A1:A1`. If the cell is not `'id'`, it PUTs the full header row `['id','title','author','year','status','type','cover_url','gb_id','gb_url','fl_work_id','fl_url','wiki_url','genres','container_title','series_name','series_order']` to `Books!A1:P1`.
+`initializeSheet()` reads `Books!A1:A1`. If the cell is not `'id'`, it PUTs the full header row `['id','title','author','year','status','type','cover_url','gb_id','gb_url','fl_work_id','fl_url','wiki_url','genres','series_name','series_order']` to `Books!A1:O1`.
 
 ### Delete operation
 
@@ -389,10 +388,10 @@ All calls go through the internal `api(path, method, body?)` function which: (1)
 | Operation | Method | Path | Notes |
 |---|---|---|---|
 | Read headers | GET | `/{id}/values/Books!A1:A1` | Check cell A1 = `'id'` |
-| Write headers | PUT | `/{id}/values/Books!A1:P1?valueInputOption=RAW` | First-run initialization |
-| Read all books | GET | `/{id}/values/Books!A:P` | Returns all 16 columns |
-| Append book | POST | `/{id}/values/Books!A:P:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS` | Response contains `updates.updatedRange` with new row |
-| Update book | PUT | `/{id}/values/Books!A{row}:P{row}?valueInputOption=RAW` | Requires `_row` |
+| Write headers | PUT | `/{id}/values/Books!A1:O1?valueInputOption=RAW` | First-run initialization |
+| Read all books | GET | `/{id}/values/Books!A:O` | Returns all 15 columns |
+| Append book | POST | `/{id}/values/Books!A:O:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS` | Response contains `updates.updatedRange` with new row |
+| Update book | PUT | `/{id}/values/Books!A{row}:O{row}?valueInputOption=RAW` | Requires `_row` |
 | Get sheet metadata | GET | `/{id}?fields=sheets.properties` | Required for delete (gets numeric sheetId) |
 | Delete row | POST | `/{id}:batchUpdate` | `deleteDimension` request |
 
@@ -446,7 +445,9 @@ Base URL: `https://api.fantlab.ru` (no auth required)
 
 Endpoint: `https://query.wikidata.org/sparql`
 
-SPARQL query matches `wdt:P212` (ISBN-13), requests `ruWiki` and `enWiki` optional bindings. Prefers Russian Wikipedia; falls back to English. Returns `null` if no match or on network error.
+SPARQL query matches `wdt:P212` (ISBN-13). Optional bindings: `ruWiki`, `enWiki` (sitelinks), and `fantlabId` (`wdt:P5699` — FantLab work ID). Prefers Russian Wikipedia; falls back to English. Returns `{ wiki_url, fl_work_id }` — both may be null if no match or on network error.
+
+In `AddBookModal`, if `fl_work_id` is returned and the book has no FantLab data yet (added via Google Books), `fl_work_id` and `fl_url` are auto-filled from the Wikidata result.
 
 ---
 
@@ -478,7 +479,7 @@ SPARQL query matches `wdt:P212` (ISBN-13), requests `ruWiki` and `enWiki` option
 **File:** `src/components/BookGrid.tsx`  
 **Shown when:** `phase === 'ready'` and `view === 'list'`.
 
-**Props:** `alphaOpen: boolean`, `onAlphaClose: () => void`
+**Props:** `alphaOpen: boolean`, `onAlphaClose: () => void`, `sortMode: SortMode`
 
 **Data sources:** `filtered`, `loading`, `error` from `useBooks()`.
 
@@ -499,18 +500,29 @@ SPARQL query matches `wdt:P212` (ISBN-13), requests `ruWiki` and `enWiki` option
 ### BookList
 
 **File:** `src/components/BookList.tsx`  
-**Props:** `books: Book[]`, `onEdit: (b: Book) => void`, `alphaOpen: boolean`, `onAlphaClose: () => void`
+**Props:** `books: Book[]`, `onEdit: (b: Book) => void`, `alphaOpen: boolean`, `onAlphaClose: () => void`, `sortMode: SortMode`
 
-**Sorting:** `books.sort((a, b) => a.title.localeCompare(b.title, 'ru') || a.author.localeCompare(b.author, 'ru'))`
+**`SortMode`** = `'title' | 'author' | 'series'`
 
-**Grouping:** first character of `title` uppercased:
-- Cyrillic А–Я (including Ё) → their letter.
-- Latin A–Z → their letter.
-- Anything else → `'#'`.
+**Title mode** (default):
+- Sort: `title` locale `ru`, then `author`.
+- Group by first letter of `title`. Divider shows the letter.
 
-Letter order: Cyrillic first (index in `'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'`), then Latin (`100 + charCodeAt(0)`), then `#` (999).
+**Author mode:**
+- Sort: `author` locale `ru`, then `title`.
+- Group by first letter of `author`. Divider shows the letter.
 
-**Dividers:** `<div id="alpha-{letter}" className={styles.divider}>` — provides scroll targets. `scroll-margin-top: 64px` compensates for sticky header.
+**Series mode:**
+- Groups books by `series_name` into a `Map<string, Book[]>`.
+- Series groups sorted alphabetically; books within each group sorted by `series_order` then `title`.
+- Divider shows **full series name** + book count (e.g. `Ведьмак  8`).
+- `alphaAnchor: boolean` flag marks the first group of each starting letter — only that divider gets `id="alpha-{letter}"`.
+- Books without `series_name` are omitted in this mode.
+- Row display: `series_name` row hidden (redundant); `#N` (order number) shown in the meta line.
+
+**Letter order:** Cyrillic first (index in `'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'`), then Latin (`100 + charCodeAt(0)`), then `#` (999).
+
+**Dividers:** `scroll-margin-top: 116px` compensates for sticky header + tab row.
 
 **Row layout (per book):**
 - Cover wrap (flex-shrink: 0, position relative):
@@ -520,10 +532,9 @@ Letter order: Cyrillic first (index in `'АБВГДЕЁЖЗИЙКЛМНОПРС�
 - Info column (flex: 1, overflow hidden):
   - Title: 1rem, font-weight 600, `-webkit-line-clamp: 2`.
   - Author: 1rem, `--text-2`, single line with ellipsis.
-  - Meta (`year · type`): 1rem, `--text-3`, only rendered if `b.year || b.type`.
-  - Series: 1rem, `--text-3`, only rendered if `b.series_name`.
-  - Container title: 1rem, `--text-3`, italic, only rendered if `b.container_title`.
-  - Links row (GB/FL/Wiki): only rendered if at least one URL is present; click stops propagation.
+  - Meta (`year · type`, or `#N · year · type` in series mode): 1rem, `--text-3`.
+  - Series line (`series_name · #N`): 1rem, `--text-3`, only in title/author modes.
+  - Links row (GB/FL/Wiki): only rendered if at least one URL present; click stops propagation.
 
 **AlphaPicker:** rendered inside the list container when `alphaOpen === true`.
 
@@ -566,13 +577,12 @@ Click on letter button → `onSelect(letter)` → `scrollToLetter(letter)` is ca
 - Status chips: Want (amber), Reading (blue), Read (green) — always one selected.
 - Type chips: Роман/Рассказ/Повесть/Сборник/Прочее — clicking active type deselects it.
 - Series name + series order (80px wide number input) in one row.
-- Container title input.
 - Sources section: three rows (Google Books / FantLab / Wikipedia), each with a label (88px wide), editable URL input, and `open_in_new` icon link.
 - Genres section: read-only tag chips (`font-size .775rem`), only rendered when `form.genres?.length > 0`.
 
 **Background enrichment** (fires on `selectResult()`):
 1. FL genres fetch (`getWorkGenres(fl_work_id)`) — sets `form.genres` only if genres not already present. Stale-check via `currentGbRef`.
-2. GB details fetch (`getBookDetails(gb_id)`) — if `categories` returned, **overrides** FL genres. Then if `isbn13` returned, calls `lookupByIsbn(isbn13)` for Wikipedia URL.
+2. GB details fetch (`getBookDetails(gb_id)`) — if `categories` returned, **overrides** FL genres. Then if `isbn13` returned, calls `lookupByIsbn(isbn13)` which returns `{ wiki_url, fl_work_id }`. `wiki_url` is set if present; `fl_work_id` (P5699) fills in FantLab fields if the book was added via Google Books and has no FL data yet.
 
 **Save:**
 - Validation: title or author must be non-empty.
@@ -645,19 +655,20 @@ Max-width 440px, border-radius 16px.
 ### Header
 
 **File:** `src/components/Header.tsx`  
-**Props:** `onLogoClick: () => void`, `onStatsClick: () => void`
+**Props:** `onLogoClick`, `onStatsClick`, `sortMode: SortMode`, `onSortModeChange: (m: SortMode) => void`, `inListView: boolean`
 
 Sticky, `top: 0`, `z-index: 10`, `backdrop-filter: blur(12px)`, background `rgba(var(--bg-rgb), .88)`.
 
 | Element | Details |
 |---|---|
 | Logo button | `icons/icon.svg` 26×26px + "Books" text (hidden on ≤520px via media query) |
-| Search input | `padding-left: 36px`, height 36px, font-size .875rem, search icon at left |
-| Filter button | 36×36px, `tune` icon; accent-highlighted when `filterOpen` or `activeFilterCount > 0`; badge (15×15px, font-size 0.6rem) shows active filter count |
+| Search input | `padding-left: 36px`, height 36px, font-size 1rem, search icon at left |
+| Filter button | 36×36px, `tune` icon; accent-highlighted when `filterOpen` or `activeFilterCount > 0`; badge (15×15px) shows active filter count |
 | Avatar button | 36×36px circle; shows `user.picture` or first letter of `user.name` on accent background |
 | User menu | Dropdown card, min-width 210px, border-radius 12px, `animation: menuIn .12s ease`; items: Statistics, Settings, Sign out (red) |
+| **Tab row** | Shown when `inListView === true`. Segmented control: **Books N \| Authors N \| Series N**. Counts computed via `useMemo` from `filtered`: total books / unique authors / unique series names. Active tab: white pill on `--surface-2` background. |
 
-`FilterPanel` renders inline below the top bar when `filterOpen === true`.
+`FilterPanel` renders inline below the tab row when `filterOpen === true`.
 
 ---
 
@@ -666,13 +677,15 @@ Sticky, `top: 0`, `z-index: 10`, `backdrop-filter: blur(12px)`, background `rgba
 **File:** `src/components/FilterPanel.tsx`  
 (No props — reads/writes `BooksContext` directly)
 
-Two rows: Status and Type. Each row has a label (width 68px, font-size .875rem, uppercase) and a chip group.
+Three rows: Status, Type, Genre. Labels sit above their chip group (column layout). Panel has `max-height: calc(100svh - 130px); overflow-y: auto` to prevent overflow on small screens.
 
 **Status chips:** All / Want / Reading / Read  
 Active chip for Want/Reading/Read uses the same amber/blue/green color scheme as the status dots (`data-status` attribute drives CSS).
 
 **Type chips:** All / Роман / Рассказ / Повесть / Сборник / Прочее  
 Active type chip uses `--accent` color scheme.
+
+**Genre chips:** derived from `allGenres` in `BooksContext` — sorted unique genres across all books. **Multi-select with OR logic:** a book passes if it has any of the selected genres. Genre chip area has `max-height: 148px; overflow-y: auto` (~3 rows visible). `activeFilterCount` counts genre selection as +1 (regardless of how many genres are selected).
 
 "Clear all filters" button (underline style, hover → `--danger`) shown when `activeFilterCount > 0`.
 
@@ -735,9 +748,8 @@ File: `public/manifest.json`
 
 **Icon design** (`public/icons/icon.svg`, `viewBox="0 0 100 100"`):
 - Orange rounded rect background (`rx="22"`, fill `#E07E38`).
-- Spine: solid white rect (`x=19 y=16 w=9 h=68 rx=3.5`).
-- Cover: stroke-only rect (`x=24 y=16 w=57 h=68 rx=5`, `fill="none" stroke="white" strokeWidth=4.5`) — orange interior shows through.
-- Three text lines: solid white (full opacity, 85%, 85%, 70%).
+- White `LibraryBooksOutlined` icon (MUI Material Icons path), scaled via `transform="translate(10,10) scale(3.333)"` — 80×80px effective, 10px padding.
+- MUI path: two stacked document rectangles with a play-triangle replaced by text lines and a back-shadow rect, all `fill="white"`.
 
 ---
 
