@@ -119,11 +119,11 @@ export default function Header({ onLogoClick, onStatsClick, sortMode, onSortMode
               <button
                 className={`${styles.tab} ${sortMode === 'title'  ? styles.tabActive : ''}`}
                 onClick={() => onSortModeChange('title')}
-              >Книги</button>
+              >Books</button>
               <button
                 className={`${styles.tab} ${sortMode === 'author' ? styles.tabActive : ''}`}
                 onClick={() => onSortModeChange('author')}
-              >Авторы</button>
+              >Authors</button>
             </div>
           </div>
         )}

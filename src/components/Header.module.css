@@ -190,8 +190,8 @@
 }
 
 .tab {
-  padding: 4px 18px;
-  font-size: .8125rem;
+  padding: 7px 20px;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--text-2);
   border-radius: calc(var(--radius-sm) - 2px);
