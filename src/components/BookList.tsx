@@ -76,12 +76,6 @@ export default function BookList({ books, onEdit, alphaOpen, onAlphaClose, sortM
         for (const book of booksInSeries) result.push({ type: 'row', book })
       }
 
-      if (noSeries.length > 0) {
-        noSeries.sort((a, b) => a.title.localeCompare(b.title, 'ru'))
-        result.push({ type: 'divider', letter: '#', label: 'No series', alphaAnchor: false })
-        for (const book of noSeries) result.push({ type: 'row', book })
-      }
-
       const letters = alphaLetters.sort((a, b) => letterOrder(a) - letterOrder(b))
       return { items: result, letters }
     }

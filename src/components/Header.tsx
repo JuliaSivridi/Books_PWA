@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useBooks } from '../context/BooksContext'
 import { useAuth } from '../context/AuthContext'
 import SettingsModal from './SettingsModal'
@@ -16,7 +16,13 @@ interface Props {
 }
 
 export default function Header({ onLogoClick, onStatsClick, sortMode, onSortModeChange, inListView }: Props) {
-  const { query, setQuery, activeFilterCount } = useBooks()
+  const { query, setQuery, activeFilterCount, filtered } = useBooks()
+
+  const counts = useMemo(() => ({
+    title:  filtered.length,
+    author: new Set(filtered.map(b => b.author)).size,
+    series: new Set(filtered.filter(b => b.series_name).map(b => b.series_name)).size,
+  }), [filtered])
   const { user, signOut } = useAuth()
   const [menuOpen,     setMenuOpen]     = useState(false)
   const [filterOpen,   setFilterOpen]   = useState(false)
@@ -119,15 +125,15 @@ export default function Header({ onLogoClick, onStatsClick, sortMode, onSortMode
               <button
                 className={`${styles.tab} ${sortMode === 'title'  ? styles.tabActive : ''}`}
                 onClick={() => onSortModeChange('title')}
-              >Books</button>
+              >Books <span className={styles.tabCount}>{counts.title}</span></button>
               <button
                 className={`${styles.tab} ${sortMode === 'author' ? styles.tabActive : ''}`}
                 onClick={() => onSortModeChange('author')}
-              >Authors</button>
+              >Authors <span className={styles.tabCount}>{counts.author}</span></button>
               <button
                 className={`${styles.tab} ${sortMode === 'series' ? styles.tabActive : ''}`}
                 onClick={() => onSortModeChange('series')}
-              >Series</button>
+              >Series <span className={styles.tabCount}>{counts.series}</span></button>
             </div>
           </div>
         )}
