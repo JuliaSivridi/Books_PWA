@@ -4,11 +4,14 @@ import { STATUS_COLORS, TYPE_LABELS } from '../types/book'
 import AlphaPicker from './AlphaPicker'
 import styles from './BookList.module.css'
 
+type SortMode = 'title' | 'author'
+
 interface Props {
   books:        Book[]
   onEdit:       (b: Book) => void
   alphaOpen:    boolean
   onAlphaClose: () => void
+  sortMode:     SortMode
 }
 
 type ListItem =
@@ -17,8 +20,8 @@ type ListItem =
 
 const CYRILLIC = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
 
-function titleFirstLetter(title: string): string {
-  const ch = title[0]?.toUpperCase() ?? ''
+function firstLetter(s: string): string {
+  const ch = s[0]?.toUpperCase() ?? ''
   if (/[А-ЯЁ]/.test(ch)) return ch
   if (/[A-Z]/.test(ch))   return ch
   return '#'
@@ -36,16 +39,20 @@ function scrollToLetter(letter: string) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-export default function BookList({ books, onEdit, alphaOpen, onAlphaClose }: Props) {
+export default function BookList({ books, onEdit, alphaOpen, onAlphaClose, sortMode }: Props) {
   const { items, letters } = useMemo<{ items: ListItem[]; letters: string[] }>(() => {
     const sorted = [...books].sort((a, b) => {
+      if (sortMode === 'author') {
+        const cmp = a.author.localeCompare(b.author, 'ru')
+        return cmp !== 0 ? cmp : a.title.localeCompare(b.title, 'ru')
+      }
       const cmp = a.title.localeCompare(b.title, 'ru')
       return cmp !== 0 ? cmp : a.author.localeCompare(b.author, 'ru')
     })
 
     const map: Record<string, Book[]> = {}
     for (const b of sorted) {
-      const l = titleFirstLetter(b.title)
+      const l = firstLetter(sortMode === 'author' ? b.author : b.title)
       if (!map[l]) map[l] = []
       map[l].push(b)
     }
@@ -57,7 +64,7 @@ export default function BookList({ books, onEdit, alphaOpen, onAlphaClose }: Pro
       for (const book of map[letter]) result.push({ type: 'row', book })
     }
     return { items: result, letters: groupLetters }
-  }, [books])
+  }, [books, sortMode])
 
   return (
     <>

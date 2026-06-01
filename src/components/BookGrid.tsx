@@ -5,9 +5,11 @@ import AddBookModal from './AddBookModal'
 import type { Book } from '../types/book'
 import styles from './BookGrid.module.css'
 
-interface Props { alphaOpen: boolean; onAlphaClose: () => void }
+type SortMode = 'title' | 'author'
 
-export default function BookGrid({ alphaOpen, onAlphaClose }: Props) {
+interface Props { alphaOpen: boolean; onAlphaClose: () => void; sortMode: SortMode }
+
+export default function BookGrid({ alphaOpen, onAlphaClose, sortMode }: Props) {
   const { filtered, loading, error } = useBooks()
   const [editing, setEditing] = useState<Book | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -38,7 +40,7 @@ export default function BookGrid({ alphaOpen, onAlphaClose }: Props) {
       )}
 
       {filtered.length > 0 && (
-        <BookList books={filtered} onEdit={setEditing} alphaOpen={alphaOpen} onAlphaClose={onAlphaClose} />
+        <BookList books={filtered} onEdit={setEditing} alphaOpen={alphaOpen} onAlphaClose={onAlphaClose} sortMode={sortMode} />
       )}
 
       <button className={styles.fab} onClick={() => setShowAdd(true)} title="Add book">

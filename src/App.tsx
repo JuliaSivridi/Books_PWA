@@ -12,13 +12,15 @@ import styles from './App.module.css'
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ||
   localStorage.getItem('google_client_id') || ''
 
-type Phase = 'loading' | 'login' | 'ready'
-type View  = 'list' | 'stats'
+type Phase    = 'loading' | 'login' | 'ready'
+type View     = 'list' | 'stats'
+type SortMode = 'title' | 'author'
 
 function MainContent() {
   const { load } = useBooks()
   const [view,      setView]      = useState<View>('list')
   const [alphaOpen, setAlphaOpen] = useState(false)
+  const [sortMode,  setSortMode]  = useState<SortMode>('title')
 
   useEffect(() => { load() }, [load])
 
@@ -32,9 +34,12 @@ function MainContent() {
       <Header
         onLogoClick={handleLogoClick}
         onStatsClick={() => setView('stats')}
+        sortMode={sortMode}
+        onSortModeChange={setSortMode}
+        inListView={view === 'list'}
       />
       {view === 'list'
-        ? <BookGrid alphaOpen={alphaOpen} onAlphaClose={() => setAlphaOpen(false)} />
+        ? <BookGrid alphaOpen={alphaOpen} onAlphaClose={() => setAlphaOpen(false)} sortMode={sortMode} />
         : <StatsPage onBack={() => setView('list')} />
       }
     </>

@@ -177,6 +177,33 @@
   pointer-events: none;
 }
 
+.tabRow {
+  margin-bottom: 8px;
+}
+
+.tabs {
+  display: inline-flex;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 1px;
+}
+
+.tab {
+  padding: 4px 18px;
+  font-size: .8125rem;
+  font-weight: 500;
+  color: var(--text-2);
+  border-radius: calc(var(--radius-sm) - 2px);
+  transition: background .15s, color .15s;
+}
+
+.tabActive {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+
 @media (max-width: 520px) {
   .logo span { display: none; }
 }

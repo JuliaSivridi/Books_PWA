@@ -5,9 +5,17 @@ import SettingsModal from './SettingsModal'
 import FilterPanel from './FilterPanel'
 import styles from './Header.module.css'
 
-interface Props { onLogoClick: () => void; onStatsClick: () => void }
+type SortMode = 'title' | 'author'
 
-export default function Header({ onLogoClick, onStatsClick }: Props) {
+interface Props {
+  onLogoClick:       () => void
+  onStatsClick:      () => void
+  sortMode:          SortMode
+  onSortModeChange:  (m: SortMode) => void
+  inListView:        boolean
+}
+
+export default function Header({ onLogoClick, onStatsClick, sortMode, onSortModeChange, inListView }: Props) {
   const { query, setQuery, activeFilterCount } = useBooks()
   const { user, signOut } = useAuth()
   const [menuOpen,     setMenuOpen]     = useState(false)
@@ -104,6 +112,21 @@ export default function Header({ onLogoClick, onStatsClick }: Props) {
             )}
           </div>
         </div>
+
+        {inListView && (
+          <div className={styles.tabRow}>
+            <div className={styles.tabs}>
+              <button
+                className={`${styles.tab} ${sortMode === 'title'  ? styles.tabActive : ''}`}
+                onClick={() => onSortModeChange('title')}
+              >Книги</button>
+              <button
+                className={`${styles.tab} ${sortMode === 'author' ? styles.tabActive : ''}`}
+                onClick={() => onSortModeChange('author')}
+              >Авторы</button>
+            </div>
+          </div>
+        )}
 
         {filterOpen && <FilterPanel />}
 
