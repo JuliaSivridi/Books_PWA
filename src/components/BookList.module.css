@@ -1,9 +1,9 @@
 .divider {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 14px 16px 6px;
-  scroll-margin-top: 64px;
+  scroll-margin-top: 116px;
 }
 
 .dividerLetter {
@@ -11,6 +11,12 @@
   font-weight: 700;
   color: var(--accent);
   letter-spacing: .02em;
+  flex-shrink: 0;
+}
+
+.dividerCount {
+  font-size: 0.75rem;
+  color: var(--text-3);
   flex-shrink: 0;
 }
 

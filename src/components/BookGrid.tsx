@@ -5,7 +5,7 @@ import AddBookModal from './AddBookModal'
 import type { Book } from '../types/book'
 import styles from './BookGrid.module.css'
 
-type SortMode = 'title' | 'author'
+type SortMode = 'title' | 'author' | 'series'
 
 interface Props { alphaOpen: boolean; onAlphaClose: () => void; sortMode: SortMode }
 

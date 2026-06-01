@@ -4,7 +4,7 @@ import { STATUS_COLORS, TYPE_LABELS } from '../types/book'
 import AlphaPicker from './AlphaPicker'
 import styles from './BookList.module.css'
 
-type SortMode = 'title' | 'author'
+export type SortMode = 'title' | 'author' | 'series'
 
 interface Props {
   books:        Book[]
@@ -15,7 +15,7 @@ interface Props {
 }
 
 type ListItem =
-  | { type: 'divider'; letter: string }
+  | { type: 'divider'; letter: string; label: string; alphaAnchor: boolean; count?: number }
   | { type: 'row';     book: Book }
 
 const CYRILLIC = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
@@ -41,6 +41,52 @@ function scrollToLetter(letter: string) {
 
 export default function BookList({ books, onEdit, alphaOpen, onAlphaClose, sortMode }: Props) {
   const { items, letters } = useMemo<{ items: ListItem[]; letters: string[] }>(() => {
+    const result: ListItem[] = []
+
+    // ── Series mode ──────────────────────────────────────────────────────────
+    if (sortMode === 'series') {
+      const seriesMap = new Map<string, Book[]>()
+      const noSeries:  Book[] = []
+
+      for (const b of books) {
+        if (b.series_name) {
+          const arr = seriesMap.get(b.series_name) ?? []
+          arr.push(b)
+          seriesMap.set(b.series_name, arr)
+        } else {
+          noSeries.push(b)
+        }
+      }
+
+      const seriesNames = [...seriesMap.keys()].sort((a, b) => a.localeCompare(b, 'ru'))
+      const seenLetters = new Set<string>()
+      const alphaLetters: string[] = []
+
+      for (const name of seriesNames) {
+        const letter = firstLetter(name)
+        const alphaAnchor = !seenLetters.has(letter)
+        if (alphaAnchor) { seenLetters.add(letter); alphaLetters.push(letter) }
+
+        const booksInSeries = seriesMap.get(name)!.sort((a, b) => {
+          const ao = a.series_order ?? 999, bo = b.series_order ?? 999
+          return ao !== bo ? ao - bo : a.title.localeCompare(b.title, 'ru')
+        })
+
+        result.push({ type: 'divider', letter, label: name, alphaAnchor, count: booksInSeries.length })
+        for (const book of booksInSeries) result.push({ type: 'row', book })
+      }
+
+      if (noSeries.length > 0) {
+        noSeries.sort((a, b) => a.title.localeCompare(b.title, 'ru'))
+        result.push({ type: 'divider', letter: '#', label: 'No series', alphaAnchor: false })
+        for (const book of noSeries) result.push({ type: 'row', book })
+      }
+
+      const letters = alphaLetters.sort((a, b) => letterOrder(a) - letterOrder(b))
+      return { items: result, letters }
+    }
+
+    // ── Title / Author modes ─────────────────────────────────────────────────
     const sorted = [...books].sort((a, b) => {
       if (sortMode === 'author') {
         const cmp = a.author.localeCompare(b.author, 'ru')
@@ -58,9 +104,8 @@ export default function BookList({ books, onEdit, alphaOpen, onAlphaClose, sortM
     }
 
     const groupLetters = Object.keys(map).sort((a, b) => letterOrder(a) - letterOrder(b))
-    const result: ListItem[] = []
     for (const letter of groupLetters) {
-      result.push({ type: 'divider', letter })
+      result.push({ type: 'divider', letter, label: letter, alphaAnchor: true })
       for (const book of map[letter]) result.push({ type: 'row', book })
     }
     return { items: result, letters: groupLetters }
@@ -81,11 +126,14 @@ export default function BookList({ books, onEdit, alphaOpen, onAlphaClose, sortM
           if (item.type === 'divider') {
             return (
               <div
-                key={`div-${item.letter}`}
-                id={`alpha-${item.letter}`}
+                key={`div-${item.letter}-${item.label}`}
+                id={item.alphaAnchor ? `alpha-${item.letter}` : undefined}
                 className={styles.divider}
               >
-                <span className={styles.dividerLetter}>{item.letter}</span>
+                <span className={styles.dividerLetter}>{item.label}</span>
+                {item.count != null && (
+                  <span className={styles.dividerCount}>{item.count}</span>
+                )}
                 <span className={styles.dividerLine} />
               </div>
             )
@@ -113,14 +161,17 @@ export default function BookList({ books, onEdit, alphaOpen, onAlphaClose, sortM
                 <span className={styles.title}>{b.title}</span>
                 <span className={styles.author}>{b.author}</span>
 
-                {(b.year || b.type) && (
+                {(b.year || b.type || (sortMode === 'series' && b.series_order != null)) && (
                   <span className={styles.meta}>
+                    {sortMode === 'series' && b.series_order != null && (
+                      <span>#{b.series_order}</span>
+                    )}
                     {b.year  && <span>{b.year}</span>}
                     {b.type  && <span>{TYPE_LABELS[b.type]}</span>}
                   </span>
                 )}
 
-                {b.series_name && (
+                {sortMode !== 'series' && b.series_name && (
                   <span className={styles.series}>
                     {b.series_name}
                     {b.series_order != null && ` · #${b.series_order}`}

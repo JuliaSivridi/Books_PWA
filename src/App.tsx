@@ -14,7 +14,7 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ||
 
 type Phase    = 'loading' | 'login' | 'ready'
 type View     = 'list' | 'stats'
-type SortMode = 'title' | 'author'
+type SortMode = 'title' | 'author' | 'series'
 
 function MainContent() {
   const { load } = useBooks()

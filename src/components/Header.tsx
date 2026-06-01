@@ -5,7 +5,7 @@ import SettingsModal from './SettingsModal'
 import FilterPanel from './FilterPanel'
 import styles from './Header.module.css'
 
-type SortMode = 'title' | 'author'
+type SortMode = 'title' | 'author' | 'series'
 
 interface Props {
   onLogoClick:       () => void
@@ -124,6 +124,10 @@ export default function Header({ onLogoClick, onStatsClick, sortMode, onSortMode
                 className={`${styles.tab} ${sortMode === 'author' ? styles.tabActive : ''}`}
                 onClick={() => onSortModeChange('author')}
               >Authors</button>
+              <button
+                className={`${styles.tab} ${sortMode === 'series' ? styles.tabActive : ''}`}
+                onClick={() => onSortModeChange('series')}
+              >Series</button>
             </div>
           </div>
         )}
