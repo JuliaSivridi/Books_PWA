@@ -4,6 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: calc(100svh - 130px);
+  overflow-y: auto;
 }
 
 .filterRow {
@@ -24,7 +26,12 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  flex: 1;
+}
+
+.chipsGenre {
+  max-height: 148px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .chip {

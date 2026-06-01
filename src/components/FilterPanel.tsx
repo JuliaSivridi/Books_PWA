@@ -66,7 +66,7 @@ export default function FilterPanel() {
       {allGenres.length > 0 && (
         <div className={styles.filterRow}>
           <span className={styles.filterLabel}>Genre</span>
-          <div className={styles.chips}>
+          <div className={`${styles.chips} ${styles.chipsGenre}`}>
             {allGenres.map(g => (
               <button
                 key={g}
