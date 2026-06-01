@@ -20,7 +20,14 @@ const TYPE_OPTIONS: { key: BookType | 'all'; label: string }[] = [
 ]
 
 export default function FilterPanel() {
-  const { filters, setFilters, clearFilters, activeFilterCount } = useBooks()
+  const { filters, setFilters, clearFilters, activeFilterCount, allGenres } = useBooks()
+
+  function toggleGenre(g: string) {
+    const next = filters.genres.includes(g)
+      ? filters.genres.filter(x => x !== g)
+      : [...filters.genres, g]
+    setFilters({ genres: next })
+  }
 
   return (
     <div className={styles.panel}>
@@ -55,6 +62,23 @@ export default function FilterPanel() {
           ))}
         </div>
       </div>
+
+      {allGenres.length > 0 && (
+        <div className={styles.filterRow}>
+          <span className={styles.filterLabel}>Genre</span>
+          <div className={styles.chips}>
+            {allGenres.map(g => (
+              <button
+                key={g}
+                className={`${styles.chip} ${filters.genres.includes(g) ? styles.chipActive : ''}`}
+                onClick={() => toggleGenre(g)}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {activeFilterCount > 0 && (
         <button className={styles.clearBtn} onClick={clearFilters}>

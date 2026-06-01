@@ -5,11 +5,13 @@ import { fetchBooks, addBook, updateBook, deleteBook, initializeSheet } from '..
 export interface FiltersState {
   status: BookStatus | 'all'
   type:   BookType  | 'all'
+  genres: string[]
 }
 
 const BLANK_FILTERS: FiltersState = {
   status: 'all',
   type:   'all',
+  genres: [],
 }
 
 interface State {
@@ -67,6 +69,7 @@ function buildIndex<T>(items: T[], keyFn: (item: T) => string | undefined): Reco
 interface Ctx extends State {
   filtered:          Book[]
   activeFilterCount: number
+  allGenres:         string[]
   gbIndex:           Record<string, Book>
   flIndex:           Record<string, Book>
   titleIndex:        Record<string, Book>
@@ -121,6 +124,10 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     return state.books.filter(b => {
       if (filters.status !== 'all' && b.status !== filters.status) return false
       if (filters.type   !== 'all' && b.type   !== filters.type)   return false
+      if (filters.genres.length > 0) {
+        const bookGenres = b.genres ?? []
+        if (!filters.genres.some(g => bookGenres.includes(g))) return false
+      }
       if (query) {
         const q = query.toLowerCase()
         const match =
@@ -139,8 +146,17 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     let n = 0
     if (f.status !== 'all') n++
     if (f.type   !== 'all') n++
+    if (f.genres.length > 0) n++
     return n
   }, [state.filters])
+
+  const allGenres = useMemo(() => {
+    const set = new Set<string>()
+    for (const b of state.books)
+      for (const g of (b.genres ?? []))
+        if (g) set.add(g)
+    return [...set].sort((a, b) => a.localeCompare(b, 'ru'))
+  }, [state.books])
 
   const gbIndex    = useMemo(() => buildIndex(state.books, b => b.gb_id),       [state.books])
   const flIndex    = useMemo(() => buildIndex(state.books, b => b.fl_work_id),   [state.books])
@@ -149,7 +165,7 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <BooksCtx.Provider value={{
-      ...state, filtered, activeFilterCount,
+      ...state, filtered, activeFilterCount, allGenres,
       gbIndex, flIndex, titleIndex,
       load, create, edit, remove, setQuery, setFilters, clearFilters,
     }}>
