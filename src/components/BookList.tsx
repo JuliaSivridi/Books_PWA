@@ -155,17 +155,14 @@ export default function BookList({ books, onEdit, alphaOpen, onAlphaClose, sortM
                 <span className={styles.title}>{b.title}</span>
                 <span className={styles.author}>{b.author}</span>
 
-                {(b.year || b.type || (sortMode === 'series' && b.series_order != null)) && (
+                {(b.year || b.type) && (
                   <span className={styles.meta}>
-                    {sortMode === 'series' && b.series_order != null && (
-                      <span>#{b.series_order}</span>
-                    )}
-                    {b.year  && <span>{b.year}</span>}
-                    {b.type  && <span>{TYPE_LABELS[b.type]}</span>}
+                    {b.year && <span>{b.year}</span>}
+                    {b.type && <span>{TYPE_LABELS[b.type]}</span>}
                   </span>
                 )}
 
-                {sortMode !== 'series' && b.series_name && (
+                {b.series_name && (
                   <span className={styles.series}>
                     {b.series_name}
                     {b.series_order != null && ` · #${b.series_order}`}
