@@ -53,9 +53,10 @@ interface FLMiniWork {
 
 function fixImageUrl(url?: string): string | undefined {
   if (!url) return undefined
-  if (url.startsWith('//')) return 'https:' + url
-  if (url.startsWith('/'))  return 'https://fantlab.ru' + url
-  return url
+  let result = url
+  if (result.startsWith('//')) result = 'https:' + result
+  else if (result.startsWith('/')) result = 'https://fantlab.ru' + result
+  return result.replace('/small/', '/big/')
 }
 
 export async function searchBooks(query: string): Promise<FLSearchResult> {
@@ -70,7 +71,7 @@ export async function searchBooks(query: string): Promise<FLSearchResult> {
       work_year:      w.year,
       authors:        (w.creators?.authors ?? []).map(a => ({ id: a.id, name: a.name })),
       work_type_name: w.name_type ?? w.name_type_icon ?? '',
-      image:          fixImageUrl(w.image_preview ?? w.image),
+      image:          fixImageUrl(w.image ?? w.image_preview),
     }))
     return { works }
   } catch {
