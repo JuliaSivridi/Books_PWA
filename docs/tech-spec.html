@@ -505,7 +505,7 @@ Component re-render</code></pre>
       <tr><td><code>books_sheet_id</code></td><td>Google Sheets file ID</td></tr>
       <tr><td><code>books_sheet_name</code></td><td>Google Sheets file name</td></tr>
       <tr><td><code>gb_key</code></td><td>Google Books API key (optional, user-supplied)</td></tr>
-      <tr><td><code>google_client_id</code></td><td>OAuth client ID fallback (if env var not set)</td></tr>
+      <tr><td><code>books_google_client_id</code></td><td>OAuth client ID fallback (if env var not set)</td></tr>
     </tbody>
   </table>
 
@@ -606,7 +606,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     </tbody>
   </table>
   <p><strong>Genre enrichment:</strong> fetches <code>/work/{id}/extended</code>, finds group matching <code>/жанр/i</code>, recursively collects items where <code>percent ≥ 0.1</code>, up to 8 results.</p>
-  <p><strong>Image URL fixing:</strong> <code>//cdn...</code> → <code>https://cdn...</code>; <code>/img...</code> → <code>https://fantlab.ru/img...</code>.</p>
+  <p><strong>Image URL fixing:</strong> <code>//cdn...</code> → <code>https://cdn...</code>; <code>/img...</code> → <code>https://fantlab.ru/img...</code>. Then replaces <code>/small/</code> with <code>/big/</code> for full-resolution covers. Source preference: <code>w.image</code> (full size) over <code>w.image_preview</code> (thumbnail).</p>
 
   <h2>Wikidata SPARQL</h2>
   <p>Endpoint: <code>https://query.wikidata.org/sparql</code>. Matches <code>wdt:P212</code> (ISBN-13). Optional bindings: <code>ruWiki</code>, <code>enWiki</code> (sitelinks) and <code>fantlabId</code> (<code>wdt:P5699</code> — FantLab work ID). Prefers Russian Wikipedia; falls back to English. Returns <code>{ wiki_url, fl_work_id }</code> — both may be null on no match or network error.</p>
@@ -647,10 +647,10 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   <ul>
     <li><strong>Title mode:</strong> sort by title then author; group by first letter of title; divider shows letter.</li>
     <li><strong>Author mode:</strong> sort by author then title; group by first letter of author; divider shows letter.</li>
-    <li><strong>Series mode:</strong> group books by <code>series_name</code> into a Map; series sorted alphabetically; books within sorted by <code>series_order</code> then title. Divider shows <strong>full series name</strong> + book count. <code>alphaAnchor</code> flag marks the first group of each starting letter — only that divider gets <code>id="alpha-{letter}"</code>. Books without <code>series_name</code> are omitted. Row hides redundant series name; shows <code>#N</code> in meta instead.</li>
+    <li><strong>Series mode:</strong> group books by <code>series_name</code> into a Map; series sorted alphabetically; books within sorted by <code>series_order</code> then title. Divider shows <strong>full series name</strong> + book count. <code>alphaAnchor</code> flag marks the first group of each starting letter — only that divider gets <code>id="alpha-{letter}"</code>. Books without <code>series_name</code> are omitted.</li>
   </ul>
   <p><strong>Dividers:</strong> <code>scroll-margin-top: 116px</code> (accounts for sticky header + tab row).</p>
-  <p><strong>Row layout:</strong> cover (90×135px) with status dot (16×16px, bottom-right) + info column (title 2-line clamp, author, meta line, series line in title/author modes, GB/FL/Wiki links).</p>
+  <p><strong>Row layout:</strong> cover (90×135px) with status dot (16×16px, bottom-right) + info column (title 2-line clamp, author, meta line (<code>year · type</code>), series line (<code>series_name · #N</code>, shown in <strong>all</strong> sort modes), GB/FL/Wiki links).</p>
   <p>Renders <code>AlphaPicker</code> when <code>alphaOpen === true</code>.</p>
 
   <h2 id="s9-4">AddBookModal</h2>

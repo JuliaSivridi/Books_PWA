@@ -298,7 +298,7 @@ After deletion all subsequent `_row` values are invalidated; the app reloads fro
 | `books_sheet_id` | Google Sheets file ID |
 | `books_sheet_name` | Google Sheets file name |
 | `gb_key` | Google Books API key (optional) |
-| `google_client_id` | OAuth client ID (fallback if env var not set) |
+| `books_google_client_id` | OAuth client ID (fallback if env var not set) |
 
 ### initAuth flow (src/services/auth.ts)
 
@@ -439,7 +439,7 @@ Base URL: `https://api.fantlab.ru` (no auth required)
 
 **Genre enrichment** (`getWorkGenres`): fetches `/work/{id}/extended`, finds the group whose label matches `/жанр/i`, then recursively collects items where `percent >= 0.1`, up to 8 results total.
 
-**Image URL fixing** (`fixImageUrl`): protocol-relative `//cdn...` → `https://cdn...`; path-relative `/img...` → `https://fantlab.ru/img...`.
+**Image URL fixing** (`fixImageUrl`): protocol-relative `//cdn...` → `https://cdn...`; path-relative `/img...` → `https://fantlab.ru/img...`. Then replaces `/small/` with `/big/` to always use the full-resolution cover. Source field preference: `w.image` (full size) over `w.image_preview` (thumbnail).
 
 ### Wikidata SPARQL
 
@@ -518,7 +518,6 @@ In `AddBookModal`, if `fl_work_id` is returned and the book has no FantLab data 
 - Divider shows **full series name** + book count (e.g. `Ведьмак  8`).
 - `alphaAnchor: boolean` flag marks the first group of each starting letter — only that divider gets `id="alpha-{letter}"`.
 - Books without `series_name` are omitted in this mode.
-- Row display: `series_name` row hidden (redundant); `#N` (order number) shown in the meta line.
 
 **Letter order:** Cyrillic first (index in `'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'`), then Latin (`100 + charCodeAt(0)`), then `#` (999).
 
@@ -532,8 +531,8 @@ In `AddBookModal`, if `fl_work_id` is returned and the book has no FantLab data 
 - Info column (flex: 1, overflow hidden):
   - Title: 1rem, font-weight 600, `-webkit-line-clamp: 2`.
   - Author: 1rem, `--text-2`, single line with ellipsis.
-  - Meta (`year · type`, or `#N · year · type` in series mode): 1rem, `--text-3`.
-  - Series line (`series_name · #N`): 1rem, `--text-3`, only in title/author modes.
+  - Meta (`year · type`): 1rem, `--text-3`.
+  - Series line (`series_name · #N`): 1rem, `--text-3`, shown in **all** sort modes (always visible even when the series group divider has scrolled off-screen).
   - Links row (GB/FL/Wiki): only rendered if at least one URL present; click stops propagation.
 
 **AlphaPicker:** rendered inside the list container when `alphaOpen === true`.
