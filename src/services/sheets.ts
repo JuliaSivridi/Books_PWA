@@ -40,6 +40,12 @@ async function api(path: string, method: string, body?: object): Promise<Respons
   return res
 }
 
+// Only http(s) URLs are allowed — anything else (e.g. javascript:) is dropped
+function safeUrl(raw: string | undefined): string | undefined {
+  if (!raw) return undefined
+  return /^https?:\/\//i.test(raw.trim()) ? raw.trim() : undefined
+}
+
 function parseArr(raw: string | undefined): string[] | undefined {
   if (!raw) return undefined
   try {
@@ -58,12 +64,12 @@ function rowToBook(row: string[], rowIndex: number): Book {
     year:             parseInt(row[3]) || undefined,
     status:           (row[4] as BookStatus) || 'want',
     type:             (row[5] as BookType)   || undefined,
-    cover_url:        row[6]  || undefined,
+    cover_url:        safeUrl(row[6]),
     gb_id:            row[7]  || undefined,
-    gb_url:           row[8]  || undefined,
+    gb_url:           safeUrl(row[8]),
     fl_work_id:       row[9]  || undefined,
-    fl_url:           row[10] || undefined,
-    wiki_url:         row[11] || undefined,
+    fl_url:           safeUrl(row[10]),
+    wiki_url:         safeUrl(row[11]),
     genres:           parseArr(row[12]),
     series_name:      row[13] || undefined,
     series_order:     row[14] ? parseInt(row[14]) : undefined,
@@ -135,32 +141,3 @@ export async function updateBook(book: Book): Promise<void> {
   )
 }
 
-export async function deleteBook(book: Book): Promise<void> {
-  if (!book._row) throw new Error('Row number unknown')
-  const token = await refreshTokenIfNeeded()
-  if (!token) throw new Error('Not authorized')
-  const id = getSheetId()
-
-  const metaRes = await fetch(`${SHEETS_BASE}/${id}?fields=sheets.properties`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  const meta  = await metaRes.json()
-  const sheet = meta.sheets?.find(
-    (s: { properties: { title: string; sheetId: number } }) =>
-      s.properties.title === SHEET_NAME,
-  )
-  if (!sheet) throw new Error('Books sheet not found')
-
-  await api(':batchUpdate', 'POST', {
-    requests: [{
-      deleteDimension: {
-        range: {
-          sheetId:    sheet.properties.sheetId,
-          dimension:  'ROWS',
-          startIndex: book._row - 1,
-          endIndex:   book._row,
-        },
-      },
-    }],
-  })
-}

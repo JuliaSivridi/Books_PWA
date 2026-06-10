@@ -437,12 +437,14 @@ export default function AddBookModal({ book, onClose }: Props) {
                     { key: 'fl_url',   label: 'FantLab',      placeholder: 'https://fantlab.ru/work…'  },
                     { key: 'wiki_url', label: 'Wikipedia',    placeholder: 'https://ru.wikipedia.org/…' },
                   ] as const).map(({ key, label, placeholder }) => {
-                    const url = form[key]
+                    const raw = form[key]
+                    // open button only follows http(s) links
+                    const url = raw && /^https?:\/\//i.test(raw) ? raw : undefined
                     return (
                       <div key={key} className={styles.linkRow}>
                         <span className={styles.linkLabel}>{label}</span>
                         <input
-                          value={url ?? ''}
+                          value={raw ?? ''}
                           onChange={e => set(key, e.target.value || undefined)}
                           placeholder={placeholder}
                           className={styles.linkInput}

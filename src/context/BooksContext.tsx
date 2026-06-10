@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react'
 import type { Book, BookStatus, BookType } from '../types/book'
-import { fetchBooks, addBook, updateBook, deleteBook, initializeSheet } from '../services/sheets'
+import { fetchBooks, addBook, updateBook, initializeSheet } from '../services/sheets'
 
 export interface FiltersState {
   status: BookStatus | 'all'
@@ -27,7 +27,6 @@ type Action =
   | { type: 'SET';          payload: Book[] }
   | { type: 'ADD';          payload: Book }
   | { type: 'UPDATE';       payload: Book }
-  | { type: 'DELETE';       payload: string }
   | { type: 'ERROR';        payload: string }
   | { type: 'QUERY';        payload: string }
   | { type: 'SET_FILTERS';  payload: Partial<FiltersState> }
@@ -39,7 +38,6 @@ function reducer(s: State, a: Action): State {
     case 'SET':           return { ...s, books: a.payload, loading: false, error: null }
     case 'ADD':           return { ...s, books: [...s.books, a.payload] }
     case 'UPDATE':        return { ...s, books: s.books.map(b => b.id === a.payload.id ? a.payload : b) }
-    case 'DELETE':        return { ...s, books: s.books.filter(b => b.id !== a.payload) }
     case 'ERROR':         return { ...s, error: a.payload, loading: false }
     case 'QUERY':         return { ...s, query: a.payload }
     case 'SET_FILTERS':   return { ...s, filters: { ...s.filters, ...a.payload } }
@@ -76,7 +74,6 @@ interface Ctx extends State {
   load:         () => Promise<void>
   create:       (b: Book) => Promise<void>
   edit:         (b: Book) => Promise<void>
-  remove:       (b: Book) => Promise<void>
   setQuery:     (q: string) => void
   setFilters:   (f: Partial<FiltersState>) => void
   clearFilters: () => void
@@ -108,11 +105,6 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
   const edit = useCallback(async (b: Book) => {
     await updateBook(b)
     dispatch({ type: 'UPDATE', payload: b })
-  }, [])
-
-  const remove = useCallback(async (b: Book) => {
-    await deleteBook(b)
-    dispatch({ type: 'DELETE', payload: b.id })
   }, [])
 
   const setQuery     = useCallback((q: string) => dispatch({ type: 'QUERY', payload: q }), [])
@@ -167,7 +159,7 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     <BooksCtx.Provider value={{
       ...state, filtered, activeFilterCount, allGenres,
       gbIndex, flIndex, titleIndex,
-      load, create, edit, remove, setQuery, setFilters, clearFilters,
+      load, create, edit, setQuery, setFilters, clearFilters,
     }}>
       {children}
     </BooksCtx.Provider>

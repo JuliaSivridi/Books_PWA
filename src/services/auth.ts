@@ -154,8 +154,7 @@ export function signIn(): Promise<void> {
 }
 
 export function signOut(): void {
-  const email = getUser()?.email
-  if (email) window.google?.accounts?.oauth2?.revoke(email, () => {})
+  if (accessToken) window.google?.accounts?.oauth2?.revoke(accessToken, () => {})
   clearPersistedToken()
   localStorage.removeItem(USER_KEY)
   notify(false)
