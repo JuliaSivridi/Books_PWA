@@ -1,6 +1,7 @@
-import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { Book, BookStatus, BookType } from '../types/book'
 import { fetchBooks, addBook, updateBook, initializeSheet } from '../services/sheets'
+import { cacheGet, cacheSet } from '../services/cache'
 
 export interface FiltersState {
   status: BookStatus | 'all'
@@ -89,11 +90,18 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
 
   const load = useCallback(async () => {
     dispatch({ type: 'LOADING' })
+
+    // Stale-while-revalidate: render the cached list instantly, then replace
+    // it with the fresh copy from Sheets when the fetch completes.
+    const cached = await cacheGet<Book[]>('books')
+    if (cached?.length) dispatch({ type: 'SET', payload: cached })
+
     try {
       await initializeSheet()
       dispatch({ type: 'SET', payload: await fetchBooks() })
     } catch (e) {
-      dispatch({ type: 'ERROR', payload: String(e) })
+      // With cached data on screen a transient fetch error is not fatal
+      if (!cached?.length) dispatch({ type: 'ERROR', payload: String(e) })
     }
   }, [])
 
@@ -106,6 +114,11 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     await updateBook(b)
     dispatch({ type: 'UPDATE', payload: b })
   }, [])
+
+  // Keep the cache in sync with whatever is on screen (best-effort)
+  useEffect(() => {
+    if (state.books.length > 0) void cacheSet('books', state.books)
+  }, [state.books])
 
   const setQuery     = useCallback((q: string) => dispatch({ type: 'QUERY', payload: q }), [])
   const setFilters   = useCallback((f: Partial<FiltersState>) => dispatch({ type: 'SET_FILTERS', payload: f }), [])

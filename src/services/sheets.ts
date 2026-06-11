@@ -132,10 +132,28 @@ export async function addBook(book: Book): Promise<Book> {
   return { ...book, _row: match ? parseInt(match[1]) : undefined }
 }
 
+/** The in-memory _row can go stale (cache-first start, edits from another
+ *  device). Verify the row still holds this book's id before writing;
+ *  if not, find the right row by id. */
+async function resolveRow(book: Book): Promise<number> {
+  if (book._row) {
+    const res  = await api(`/values/${SHEET_NAME}!A${book._row}`, 'GET')
+    const data = await res.json()
+    if (data.values?.[0]?.[0] === book.id) return book._row
+  }
+  const res  = await api(`/values/${SHEET_NAME}!A:A`, 'GET')
+  const data = await res.json()
+  const rows: string[][] = data.values ?? []
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === book.id) return i + 1
+  }
+  throw new Error('Книга не найдена в таблице — обновите страницу')
+}
+
 export async function updateBook(book: Book): Promise<void> {
-  if (!book._row) throw new Error('Row number unknown')
+  const row = await resolveRow(book)
   await api(
-    `/values/${SHEET_NAME}!A${book._row}:O${book._row}?valueInputOption=RAW`,
+    `/values/${SHEET_NAME}!A${row}:O${row}?valueInputOption=RAW`,
     'PUT',
     { values: [bookToRow(book)] },
   )
