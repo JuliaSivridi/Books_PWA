@@ -33,15 +33,18 @@ function MainContent() {
 
   return (
     <>
-      <Header
-        onLogoClick={handleLogoClick}
-        onStatsClick={() => setView('stats')}
-        onHelpClick={() => setView('help')}
-        onFeedbackClick={() => setView('feedback')}
-        sortMode={sortMode}
-        onSortModeChange={setSortMode}
-        inListView={view === 'list'}
-      />
+      {/* Help/Feedback are full-screen: their own "back + title" row replaces the main header */}
+      {(view === 'list' || view === 'stats') && (
+        <Header
+          onLogoClick={handleLogoClick}
+          onStatsClick={() => setView('stats')}
+          onHelpClick={() => setView('help')}
+          onFeedbackClick={() => setView('feedback')}
+          sortMode={sortMode}
+          onSortModeChange={setSortMode}
+          inListView={view === 'list'}
+        />
+      )}
       {view === 'list'     ? <BookGrid alphaOpen={alphaOpen} onAlphaClose={() => setAlphaOpen(false)} sortMode={sortMode} />
         : view === 'stats' ? <StatsPage onBack={() => setView('list')} />
         : view === 'help'  ? <HelpPage onBack={() => setView('list')} />
