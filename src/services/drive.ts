@@ -1,9 +1,14 @@
+// Drive file management under the drive.file scope: the app can only see
+// files it created itself or that the user picked via the Google Picker.
+// There is deliberately NO silent find-by-name and NO silent create — on
+// first run the user explicitly chooses "create new" or "pick existing".
+
 import { refreshTokenIfNeeded } from './auth'
 
 const DRIVE_API  = 'https://www.googleapis.com/drive/v3'
 const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets'
-const DB_NAME       = 'db_books'
-const SHEET_ID_KEY  = 'books_sheet_id'
+const DB_NAME        = 'db_books'
+const SHEET_ID_KEY   = 'books_sheet_id'
 const SHEET_NAME_KEY = 'books_sheet_name'
 
 export function getSheetId(): string {
@@ -24,44 +29,36 @@ export function clearSheetId(): void {
   localStorage.removeItem(SHEET_NAME_KEY)
 }
 
-async function driveGet(path: string): Promise<Response> {
-  const token = await refreshTokenIfNeeded()
-  if (!token) throw new Error('Не авторизован')
-  return fetch(`${DRIVE_API}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-}
-
-export async function listUserSheets(): Promise<{ id: string; name: string }[]> {
-  const q = encodeURIComponent(
-    `mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
-  )
-  const res = await driveGet(`/files?q=${q}&fields=files(id,name)&orderBy=modifiedTime+desc`)
-  if (!res.ok) throw new Error('Не удалось загрузить список файлов')
-  const data = await res.json()
-  return (data.files as { id: string; name: string }[]) ?? []
-}
-
-export async function findOrCreateBooksFile(): Promise<string> {
-  const cached = localStorage.getItem(SHEET_ID_KEY)
-  if (cached) return cached
+/**
+ * Checks whether the app currently has a working data file.
+ * 'ready'  — the stored file id is accessible.
+ * 'setup'  — no file yet, or access to the stored one was lost
+ *            (e.g. after the scope migration) → show the setup screen.
+ */
+export async function checkBooksFile(): Promise<'ready' | 'setup'> {
+  const cached = getSheetId()
+  if (!cached) return 'setup'
 
   const token = await refreshTokenIfNeeded()
   if (!token) throw new Error('Не авторизован')
 
-  const q = encodeURIComponent(
-    `name='${DB_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
-  )
-  const res = await fetch(`${DRIVE_API}/files?q=${q}&fields=files(id,name)`, {
+  const res = await fetch(`${DRIVE_API}/files/${cached}?fields=id,name`, {
     headers: { Authorization: `Bearer ${token}` },
   })
-  const data = await res.json()
-
-  if (data.files?.length > 0) {
-    const { id, name } = data.files[0] as { id: string; name: string }
-    setSheetFile(id, name)
-    return id
+  if (res.ok) {
+    const f = await res.json() as { id: string; name: string }
+    setSheetFile(f.id, f.name)   // keep the display name fresh
+    return 'ready'
   }
+  // 403/404 — the app can't see this file (stale id or scope migration).
+  // Don't clear silently-stored id yet; the setup screen explains the choice.
+  return 'setup'
+}
+
+/** Creates a fresh db_books spreadsheet (drive.file grants access to files the app creates). */
+export async function createBooksFile(): Promise<string> {
+  const token = await refreshTokenIfNeeded()
+  if (!token) throw new Error('Не авторизован')
 
   const createRes = await fetch(SHEETS_API, {
     method: 'POST',
