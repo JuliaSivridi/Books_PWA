@@ -10,7 +10,7 @@ type SortMode = 'title' | 'author' | 'series'
 interface Props { alphaOpen: boolean; onAlphaClose: () => void; sortMode: SortMode }
 
 export default function BookGrid({ alphaOpen, onAlphaClose, sortMode }: Props) {
-  const { filtered, loading, error } = useBooks()
+  const { books, filtered, loading, error } = useBooks()
   const [editing, setEditing] = useState<Book | null>(null)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -29,13 +29,20 @@ export default function BookGrid({ alphaOpen, onAlphaClose, sortMode }: Props) {
   return (
     <div className={styles.wrap}>
 
+      {/* Empty state: first run vs. nothing matched the search/filters */}
       {filtered.length === 0 && (
         <div className={styles.empty}>
           <span className={`material-symbols-outlined ${styles.emptyIcon}`}>menu_book</span>
-          <p>No books found</p>
-          <button className={styles.addFirst} onClick={() => setShowAdd(true)}>
-            Add your first book
-          </button>
+          {books.length === 0 ? (
+            <>
+              <p>No books yet</p>
+              <button className={styles.addFirst} onClick={() => setShowAdd(true)}>
+                Add your first book
+              </button>
+            </>
+          ) : (
+            <p>Nothing matches your search or filters</p>
+          )}
         </div>
       )}
 
