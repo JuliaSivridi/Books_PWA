@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useBooks } from '../context/BooksContext'
 import { useAuth } from '../context/AuthContext'
 import SettingsModal from './SettingsModal'
-import HelpModal from './HelpModal'
-import FeedbackModal from './FeedbackModal'
 import FilterPanel from './FilterPanel'
 import styles from './Header.module.css'
 
@@ -12,12 +10,14 @@ type SortMode = 'title' | 'author' | 'series'
 interface Props {
   onLogoClick:       () => void
   onStatsClick:      () => void
+  onHelpClick:       () => void
+  onFeedbackClick:   () => void
   sortMode:          SortMode
   onSortModeChange:  (m: SortMode) => void
   inListView:        boolean
 }
 
-export default function Header({ onLogoClick, onStatsClick, sortMode, onSortModeChange, inListView }: Props) {
+export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedbackClick, sortMode, onSortModeChange, inListView }: Props) {
   const { query, setQuery, activeFilterCount, filtered } = useBooks()
 
   const counts = useMemo(() => ({
@@ -29,8 +29,6 @@ export default function Header({ onLogoClick, onStatsClick, sortMode, onSortMode
   const [menuOpen,     setMenuOpen]     = useState(false)
   const [filterOpen,   setFilterOpen]   = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [showHelp,     setShowHelp]     = useState(false)
-  const [showFeedback, setShowFeedback] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -112,7 +110,7 @@ export default function Header({ onLogoClick, onStatsClick, sortMode, onSortMode
                 <button
                   className={styles.menuItem}
                   role="menuitem"
-                  onClick={() => { setMenuOpen(false); setShowHelp(true) }}
+                  onClick={() => { setMenuOpen(false); onHelpClick() }}
                 >
                   <span className="material-symbols-outlined">help</span>
                   Help
@@ -120,7 +118,7 @@ export default function Header({ onLogoClick, onStatsClick, sortMode, onSortMode
                 <button
                   className={styles.menuItem}
                   role="menuitem"
-                  onClick={() => { setMenuOpen(false); setShowFeedback(true) }}
+                  onClick={() => { setMenuOpen(false); onFeedbackClick() }}
                 >
                   <span className="material-symbols-outlined">chat</span>
                   Feedback
@@ -163,8 +161,6 @@ export default function Header({ onLogoClick, onStatsClick, sortMode, onSortMode
       </header>
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      {showHelp     && <HelpModal     onClose={() => setShowHelp(false)} />}
-      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
     </>
   )
 }
