@@ -15,9 +15,12 @@ interface Props {
   sortMode:          SortMode
   onSortModeChange:  (m: SortMode) => void
   inListView:        boolean
+  /** When set, the header shows "back arrow + title + avatar" instead of logo/search/filters */
+  overlayTitle?:     string
+  onOverlayBack?:    () => void
 }
 
-export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedbackClick, sortMode, onSortModeChange, inListView }: Props) {
+export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedbackClick, sortMode, onSortModeChange, inListView, overlayTitle, onOverlayBack }: Props) {
   const { query, setQuery, activeFilterCount, filtered } = useBooks()
 
   const counts = useMemo(() => ({
@@ -45,32 +48,43 @@ export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedb
       <header className={styles.header}>
 
         <div className={styles.top}>
-          <button className={styles.logo} onClick={onLogoClick} title="Jump to letter">
-            <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} width={26} height={26} alt="" />
-            <span>Books</span>
-          </button>
+          {overlayTitle ? (
+            <>
+              <button className={styles.overlayBack} onClick={onOverlayBack} title="Back to list">
+                <span className="material-symbols-outlined">arrow_back</span>
+              </button>
+              <span className={styles.overlayTitle}>{overlayTitle}</span>
+            </>
+          ) : (
+            <>
+              <button className={styles.logo} onClick={onLogoClick} title="Jump to letter">
+                <img src={`${import.meta.env.BASE_URL}icons/icon.svg`} width={26} height={26} alt="" />
+                <span>Books</span>
+              </button>
 
-          <div className={styles.search}>
-            <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
-            <input
-              type="search"
-              placeholder="Search by title, author, series, genre…"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
-          </div>
+              <div className={styles.search}>
+                <span className={`material-symbols-outlined ${styles.searchIcon}`}>search</span>
+                <input
+                  type="search"
+                  placeholder="Search by title, author, series, genre…"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                />
+              </div>
 
-          <button
-            className={`${styles.filterBtn} ${filterOpen || activeFilterCount > 0 ? styles.filterBtnActive : ''}`}
-            onClick={() => setFilterOpen(o => !o)}
-            title="Filters"
-            aria-expanded={filterOpen}
-          >
-            <span className="material-symbols-outlined">tune</span>
-            {activeFilterCount > 0 && (
-              <span className={styles.filterBadge}>{activeFilterCount}</span>
-            )}
-          </button>
+              <button
+                className={`${styles.filterBtn} ${filterOpen || activeFilterCount > 0 ? styles.filterBtnActive : ''}`}
+                onClick={() => setFilterOpen(o => !o)}
+                title="Filters"
+                aria-expanded={filterOpen}
+              >
+                <span className="material-symbols-outlined">tune</span>
+                {activeFilterCount > 0 && (
+                  <span className={styles.filterBadge}>{activeFilterCount}</span>
+                )}
+              </button>
+            </>
+          )}
 
           <div className={styles.userWrap} ref={menuRef}>
             <button
@@ -137,7 +151,7 @@ export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedb
           </div>
         </div>
 
-        {inListView && (
+        {!overlayTitle && inListView && (
           <div className={styles.tabRow}>
             <div className={styles.tabs}>
               <button
@@ -156,7 +170,7 @@ export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedb
           </div>
         )}
 
-        {filterOpen && <FilterPanel />}
+        {!overlayTitle && filterOpen && <FilterPanel />}
 
       </header>
 

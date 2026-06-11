@@ -33,22 +33,22 @@ function MainContent() {
 
   return (
     <>
-      {/* Help/Feedback are full-screen: their own "back + title" row replaces the main header */}
-      {(view === 'list' || view === 'stats') && (
-        <Header
-          onLogoClick={handleLogoClick}
-          onStatsClick={() => setView('stats')}
-          onHelpClick={() => setView('help')}
-          onFeedbackClick={() => setView('feedback')}
-          sortMode={sortMode}
-          onSortModeChange={setSortMode}
-          inListView={view === 'list'}
-        />
-      )}
+      {/* On Help/Feedback the header switches to "back + title + avatar" mode */}
+      <Header
+        onLogoClick={handleLogoClick}
+        onStatsClick={() => setView('stats')}
+        onHelpClick={() => setView('help')}
+        onFeedbackClick={() => setView('feedback')}
+        sortMode={sortMode}
+        onSortModeChange={setSortMode}
+        inListView={view === 'list'}
+        overlayTitle={view === 'help' ? 'Short guide' : view === 'feedback' ? 'Feedback' : undefined}
+        onOverlayBack={() => setView('list')}
+      />
       {view === 'list'     ? <BookGrid alphaOpen={alphaOpen} onAlphaClose={() => setAlphaOpen(false)} sortMode={sortMode} />
         : view === 'stats' ? <StatsPage onBack={() => setView('list')} />
-        : view === 'help'  ? <HelpPage onBack={() => setView('list')} />
-        : <FeedbackPage onBack={() => setView('list')} />
+        : view === 'help'  ? <HelpPage />
+        : <FeedbackPage />
       }
     </>
   )
