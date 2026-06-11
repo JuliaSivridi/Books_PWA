@@ -129,3 +129,10 @@ All data lives in the user's **db_books** Google Spreadsheet, found or created a
 **iOS:** Safari → Share button → *Add to Home Screen*
 
 **Desktop:** address bar → install icon (Chrome / Edge)
+
+---
+
+## Documentation
+
+- **Technical specification:** [`docs/tech-spec.md`](docs/tech-spec.md)
+
