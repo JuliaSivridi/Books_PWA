@@ -60,6 +60,8 @@
 | Book search | Google Books API v1 | runtime | No SDK; optional API key |
 | Book search | FantLab API | runtime | No auth; public API |
 | Wikipedia lookup | Wikidata SPARQL | runtime | ISBN-13 → Wikipedia URL |
+| File picker | Google Picker API | runtime | Native Drive file-open dialog; requires browser API key (`VITE_GOOGLE_API_KEY`) |
+| Client-side cache | IndexedDB (native) | runtime | Stale-while-revalidate for instant startup |
 | Icons | Material Symbols Outlined | runtime CDN | FILL=0, wght=300, GRAD=0, opsz=24 |
 
 ---
@@ -101,19 +103,22 @@ Component re-render
 2. `handleSave()` calls `create({ id: uuid(), ...form })` from `BooksContext`.
 3. `create` calls `addBook(book)` in `sheets.ts`.
 4. `sheets.ts` calls `refreshTokenIfNeeded()` → returns cached or refreshed access token.
-5. `fetch POST` to `https://sheets.googleapis.com/v4/spreadsheets/{id}/values/Books!A:P:append` with `valueInputOption=RAW&insertDataOption=INSERT_ROWS`.
-6. Response `updates.updatedRange` (e.g. `Books!A5:P5`) is parsed to extract the row number.
+5. `fetch POST` to `https://sheets.googleapis.com/v4/spreadsheets/{id}/values/Books!A:O:append` with `valueInputOption=RAW&insertDataOption=INSERT_ROWS`.
+6. Response `updates.updatedRange` (e.g. `Books!A5:O5`) is parsed to extract the row number.
 7. Book returned with `_row` set; `dispatch({ type: 'ADD', payload: saved })` appends to `state.books`.
 8. Modal closes; `filtered` is recomputed by `useMemo`.
 
-### Read path
+### Read path (stale-while-revalidate)
 
 1. `MainContent` mounts → `useEffect(() => { load() }, [load])`.
-2. `load()` dispatches `LOADING`, then calls `initializeSheet()` (writes headers if sheet is blank), then `fetchBooks()`.
-3. `fetchBooks` does `GET /values/Books!A:P`, slices off header row, maps each row via `rowToBook()`.
-4. `dispatch({ type: 'SET', payload: books })` → `state.books` updated.
-5. `useMemo` recomputes `filtered`, `gbIndex`, `flIndex`, `titleIndex`.
-6. `BookGrid` renders `BookList` with `filtered`.
+2. `load()` dispatches `LOADING`, then checks IndexedDB cache (`cacheGet('books')`).
+3. If cache is non-empty → `dispatch({ type: 'SET', payload: cached })` — list renders instantly.
+4. `initializeSheet()` + `fetchBooks()` run in background (or concurrently with the cached render).
+5. `fetchBooks` does `GET /values/Books!A:O`, slices off header row, maps each row via `rowToBook()`.
+6. `dispatch({ type: 'SET', payload: freshBooks })` — replaces cached data; `cacheSet('books', freshBooks)` updates IndexedDB.
+7. If the network fetch fails and cache was shown, the error is suppressed (non-fatal); if no cache, the error state is shown.
+8. `useMemo` recomputes `filtered`, `gbIndex`, `flIndex`, `titleIndex`.
+9. `BookGrid` renders `BookList` with `filtered`.
 
 ### Error handling
 
@@ -133,17 +138,15 @@ Books-PWA/
 │   └── workflows/
 │       └── deploy.yml          CI/CD: build + deploy to GitHub Pages
 ├── docs/
-│   ├── tech-spec-example.css   CSS template for HTML spec
-│   ├── tech-spec.md            This document
-│   └── tech-spec.html          HTML version of this document
+│   └── tech-spec.md            This document
 ├── public/
 │   ├── manifest.json           PWA manifest (name, icons, start_url)
 │   └── icons/
 │       └── icon.svg            App icon: orange rounded rect + white outlined book
 ├── src/
 │   ├── main.tsx                React root; mounts <App /> in StrictMode
-│   ├── App.tsx                 Phase machine (loading/login/ready); context providers
-│   ├── App.module.css          Splash screen styles
+│   ├── App.tsx                 Phase machine (loading/login/setup/ready); SetupScreen; context providers
+│   ├── App.module.css          Splash + setup screen styles
 │   ├── index.css               Global CSS variables (light+dark), resets, Material Symbols
 │   ├── vite-env.d.ts           Vite type declarations (import.meta.env)
 │   ├── google.d.ts             TypeScript types for window.google GIS API
@@ -151,20 +154,22 @@ Books-PWA/
 │   │   └── book.ts             Book interface, BookStatus, BookType enums, label/color maps
 │   ├── services/
 │   │   ├── auth.ts             GIS OAuth2 token management + localStorage persistence
-│   │   ├── drive.ts            Drive API: find/create db_books spreadsheet, list sheets
+│   │   ├── drive.ts            Drive API: checkBooksFile, createBooksFile (drive.file scope)
+│   │   ├── picker.ts           Google Picker API: openSpreadsheetPicker()
+│   │   ├── cache.ts            IndexedDB key-value cache: cacheGet / cacheSet
 │   │   ├── sheets.ts           Sheets API CRUD: row↔Book mapper, initializeSheet, CRUD ops
 │   │   ├── googlebooks.ts      Google Books API: search, getBookDetails, cover URL, page URL
 │   │   ├── fantlab.ts          FantLab API: search-txt, work genres, type mapping
-│   │   └── wikidata.ts         Wikidata SPARQL: ISBN-13 → Wikipedia URL
+│   │   └── wikidata.ts         Wikidata SPARQL: ISBN-13 → Wikipedia URL + FantLab ID
 │   ├── context/
 │   │   ├── AuthContext.tsx     React context wrapping auth.ts; exposes authenticated, user
 │   │   └── BooksContext.tsx    Central state: books[], filters, query, CRUD actions, indexes
 │   └── components/
 │       ├── LoginPage.tsx       Full-screen sign-in with Google button
 │       ├── LoginPage.module.css
-│       ├── Header.tsx          Sticky top bar: logo, search, filter toggle, user menu
+│       ├── Header.tsx          Sticky top bar: logo, search, filter toggle, user menu; overlay mode for Help/Feedback
 │       ├── Header.module.css
-│       ├── FilterPanel.tsx     Expandable filter: status chips + type chips
+│       ├── FilterPanel.tsx     Expandable filter: status chips + type chips + genre chips
 │       ├── FilterPanel.module.css
 │       ├── BookGrid.tsx        Container: loading/error/empty states, FAB, AddBookModal
 │       ├── BookGrid.module.css
@@ -176,7 +181,9 @@ Books-PWA/
 │       ├── AddBookModal.module.css
 │       ├── StatsPage.tsx       Full-page statistics with donut charts
 │       ├── StatsPage.module.css
-│       ├── SettingsModal.tsx   Settings: spreadsheet picker + GB API key
+│       ├── HelpPage.tsx        Full-page short guide (StatsPage layout pattern)
+│       ├── FeedbackPage.tsx    Full-page feedback form; POSTs to VITE_FEEDBACK_URL
+│       ├── SettingsModal.tsx   Settings: Google Picker for spreadsheet + GB API key
 │       └── SettingsModal.module.css
 ```
 
@@ -345,23 +352,30 @@ onAuthChange listener registered
 initAuth(CLIENT_ID) called
   │
   ├─ isAuth = true →
-  │    findOrCreateBooksFile()
-  │      ├─ success → setPhase('ready')
-  │      └─ failure → setDriveError(msg); setPhase('login')
+  │    checkBooksFile()
+  │      ├─ 'ready' → setPhase('ready')
+  │      ├─ 'setup' → setPhase('setup')   ← SetupScreen shown
+  │      └─ throws  → setDriveError(msg); setPhase('login')
   │
   └─ isAuth = false → setPhase('login')
 ```
 
-`findOrCreateBooksFile()`:
-1. If `localStorage.books_sheet_id` exists → return it immediately.
-2. Search Drive: `name='db_books' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`.
-3. If found → `setSheetFile(id, name)`; return id.
-4. If not found → POST to Sheets API to create a new spreadsheet with title `db_books` and one sheet named `Books` (sheetId: 0); store id; return id.
+**Phase machine:** `'loading' | 'login' | 'setup' | 'ready'`
+
+`checkBooksFile()` (drive.ts):
+1. If `localStorage.books_sheet_id` is empty → return `'setup'`.
+2. Fetch `GET /drive/v3/files/{id}?fields=id,name` with the stored id.
+3. If HTTP 200 → `setSheetFile(id, name)`; return `'ready'`.
+4. If 403/404 (app can't see the file — stale id or post-scope-migration) → return `'setup'`.
+
+**SetupScreen** (rendered when `phase === 'setup'`): two explicit choices:
+- **Choose from Google Drive** → opens `openSpreadsheetPicker()` (native Google Picker); the picked file is granted to the app permanently (drive.file grant on Google's side).
+- **Create new spreadsheet** → `createBooksFile()` POSTs to Sheets API, stores the new id.
 
 ### Sign-out
 
 `signOut()`:
-1. Calls `window.google.accounts.oauth2.revoke(email, () => {})`.
+1. Calls `window.google.accounts.oauth2.revoke(accessToken, () => {})` — revokes the access token (not the email).
 2. Calls `clearPersistedToken()` (removes token + expiry from localStorage).
 3. Calls `localStorage.removeItem('books_user')`.
 4. Calls `notify(false)` → `AppInner` transitions to phase `'login'`.
@@ -371,9 +385,10 @@ initAuth(CLIENT_ID) called
 ```
 email
 profile
-https://www.googleapis.com/auth/spreadsheets
-https://www.googleapis.com/auth/drive.metadata.readonly
+https://www.googleapis.com/auth/drive.file
 ```
+
+`drive.file` replaces the previous `spreadsheets` + `drive.metadata.readonly` pair. The app can only read and write files it created itself or that the user explicitly picked via the Google Picker. It cannot enumerate other Drive files.
 
 ---
 
@@ -391,18 +406,26 @@ All calls go through the internal `api(path, method, body?)` function which: (1)
 | Write headers | PUT | `/{id}/values/Books!A1:O1?valueInputOption=RAW` | First-run initialization |
 | Read all books | GET | `/{id}/values/Books!A:O` | Returns all 15 columns |
 | Append book | POST | `/{id}/values/Books!A:O:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS` | Response contains `updates.updatedRange` with new row |
-| Update book | PUT | `/{id}/values/Books!A{row}:O{row}?valueInputOption=RAW` | Requires `_row` |
-| Get sheet metadata | GET | `/{id}?fields=sheets.properties` | Required for delete (gets numeric sheetId) |
-| Delete row | POST | `/{id}:batchUpdate` | `deleteDimension` request |
+| Update book | PUT | `/{id}/values/Books!A{row}:O{row}?valueInputOption=RAW` | Row resolved by `resolveRow()` before write |
+
+**`resolveRow(book)`** — called before every `updateBook`:
+1. Fetch `GET /values/Books!A{book._row}` and check if `values[0][0] === book.id`.
+2. If yes → return `book._row`.
+3. If no (stale `_row` from cache or another device) → fetch `GET /values/Books!A:A`, scan column A for `book.id`, return the correct row index. Throws if not found.
+
+**`safeUrl(raw)`** — applied to all URL fields in `rowToBook` and form input:
+Only strings matching `/^https?:\/\//i` are kept; anything else (empty, `javascript:`, etc.) becomes `undefined`.
 
 ### Google Drive API v3
 
 Base URL: `https://www.googleapis.com/drive/v3`
 
+Scope: `drive.file` — the app can only access files it created or that the user picked via the Picker.
+
 | Operation | Method | Path | Notes |
 |---|---|---|---|
-| Find db_books | GET | `/files?q=name='db_books'...&fields=files(id,name)` | trashed=false |
-| List all sheets | GET | `/files?q=mimeType=spreadsheet...&orderBy=modifiedTime+desc` | Used in SettingsModal picker |
+| Check file access | GET | `/files/{id}?fields=id,name` | Returns 200 → ready; 403/404 → show setup screen |
+| Create spreadsheet | POST | `https://sheets.googleapis.com/v4/spreadsheets` | New db_books with one "Books" sheet (sheetId 0) |
 
 ### Google Books API v1
 
@@ -449,9 +472,48 @@ SPARQL query matches `wdt:P212` (ISBN-13). Optional bindings: `ruWiki`, `enWiki`
 
 In `AddBookModal`, if `fl_work_id` is returned and the book has no FantLab data yet (added via Google Books), `fl_work_id` and `fl_url` are auto-filled from the Wikidata result.
 
+### Google Picker API
+
+Loaded lazily from `https://apis.google.com/js/api.js` via `gapi.load('picker')`.
+
+`openSpreadsheetPicker(apiKey, appId)` (`src/services/picker.ts`):
+1. Calls `refreshTokenIfNeeded()` to get a fresh access token.
+2. Loads the Picker library if not already loaded (cached as a module-level Promise).
+3. Builds a `DocsView` filtered to spreadsheets; creates a `PickerBuilder` with `appId`, OAuth token, and developer key.
+4. Resolves with `{ id, name }` on `PICKED`, or `null` on `CANCEL`.
+
+`apiKey` = `VITE_GOOGLE_API_KEY` (browser API key, Picker API must be enabled).  
+`appId` = numeric Cloud project number, derived from `CLIENT_ID.split('-')[0]`.  
+With `drive.file`, picking a file permanently grants the app access to it on Google's side.
+
+### IndexedDB cache
+
+`src/services/cache.ts` — minimal key-value wrapper over the browser's native IndexedDB (no dependencies).
+
+- Database name: `books_cache`; object store: `kv`.
+- `cacheGet<T>(key)` → `T | null` — fails silently (returns `null`) on any IDB error.
+- `cacheSet(key, value)` → `void` — best-effort; errors are swallowed.
+
+Used in `BooksContext.load()` for **stale-while-revalidate**: the cached book list is dispatched immediately so the UI renders without a network round-trip, then replaced by the fresh Sheets response. A failed network fetch is non-fatal when cached data is on screen. `cacheSet` is called after every successful fetch and after every local mutation that changes `state.books`.
+
 ---
 
 ## 9. UI Screens
+
+### SetupScreen
+
+**File:** `src/App.tsx` (inline component `SetupScreen`)  
+**Shown when:** `phase === 'setup'` — no spreadsheet file is linked yet, or the stored id is no longer accessible.
+
+**Layout:** same splash container as the loading screen. Centered column with:
+- App icon (64×64px) + "Choose your data file" heading.
+- Explanatory paragraph (max-width 320px).
+- Two buttons (flex row, wraps on narrow screens):
+  - **"Choose from Google Drive"** (primary/accent) → `openSpreadsheetPicker()` → `setSheetFile(id, name)` → `setPhase('ready')`.
+  - **"Create new spreadsheet"** (secondary) → `createBooksFile()` → `setPhase('ready')`.
+- Error message in `#e05555` if either action throws.
+
+---
 
 ### LoginPage
 
@@ -590,6 +652,26 @@ Click on letter button → `onSelect(letter)` → `scrollToLetter(letter)` is ca
 
 ---
 
+### HelpPage
+
+**File:** `src/components/HelpPage.tsx`  
+**Shown when:** `view === 'help'`. Reachable from the avatar menu → Help.
+
+Uses the same full-page container as `StatsPage`. Content: three sections ("Basics", "Find & organize", "Data"), each with a small-caps heading and a list of `term / description` pairs. No state, no API calls.
+
+---
+
+### FeedbackPage
+
+**File:** `src/components/FeedbackPage.tsx`  
+**Shown when:** `view === 'feedback'`. Reachable from the avatar menu → Feedback.
+
+**State:** `message: string`, `sending: boolean`, `sent: boolean`.
+
+**Send action:** POSTs `application/x-www-form-urlencoded` with fields `app=Books`, `email={user.email}`, `message={text}` to `VITE_FEEDBACK_URL` using `mode: 'no-cors'`. Success is assumed after the fetch resolves (no-cors hides the status code). Shows "Thank you!" on send. If `VITE_FEEDBACK_URL` is not configured, shows a "not configured" message instead.
+
+---
+
 ### StatsPage
 
 **File:** `src/components/StatsPage.tsx`  
@@ -635,9 +717,8 @@ Max-width 440px, border-radius 16px.
 
 **Section 1 — Google Spreadsheet:**
 - Shows current sheet name and a "Change" button.
-- On "Change": `listUserSheets()` (Drive API) returns all Google Sheets ordered by `modifiedTime desc`.
-- Picker list (max-height 240px): clicking any item calls `setSheetFile(id, name)` then `load()` to reload books.
-- Currently active sheet shown with accent color + checkmark icon (18px).
+- On "Change": opens the native Google Picker (`openSpreadsheetPicker()`). Selecting a file calls `setSheetFile(id, name)` then `load()`, then closes the modal.
+- With `drive.file` scope, picking a file through the Picker is the only way to grant the app access to an existing spreadsheet not created by it.
 
 **Section 2 — Google Books API Key:**
 - `<input type="password">` bound to `gbKey` state, initialized from `getGBKey()`.
@@ -654,9 +735,11 @@ Max-width 440px, border-radius 16px.
 ### Header
 
 **File:** `src/components/Header.tsx`  
-**Props:** `onLogoClick`, `onStatsClick`, `sortMode: SortMode`, `onSortModeChange: (m: SortMode) => void`, `inListView: boolean`
+**Props:** `onLogoClick`, `onStatsClick`, `onHelpClick`, `onFeedbackClick`, `sortMode: SortMode`, `onSortModeChange: (m: SortMode) => void`, `inListView: boolean`, `overlayTitle?: string`, `onOverlayBack?: () => void`
 
 Sticky, `top: 0`, `z-index: 10`, `backdrop-filter: blur(12px)`, background `rgba(var(--bg-rgb), .88)`.
+
+**Normal mode** (`overlayTitle` is undefined):
 
 | Element | Details |
 |---|---|
@@ -664,10 +747,14 @@ Sticky, `top: 0`, `z-index: 10`, `backdrop-filter: blur(12px)`, background `rgba
 | Search input | `padding-left: 36px`, height 36px, font-size 1rem, search icon at left |
 | Filter button | 36×36px, `tune` icon; accent-highlighted when `filterOpen` or `activeFilterCount > 0`; badge (15×15px) shows active filter count |
 | Avatar button | 36×36px circle; shows `user.picture` or first letter of `user.name` on accent background |
-| User menu | Dropdown card, min-width 210px, border-radius 12px, `animation: menuIn .12s ease`; items: Statistics, Settings, Sign out (red) |
-| **Tab row** | Shown when `inListView === true`. Segmented control: **Books N \| Authors N \| Series N**. Counts computed via `useMemo` from `filtered`: total books / unique authors / unique series names. Active tab: white pill on `--surface-2` background. |
+| User menu | Dropdown card, min-width 210px, border-radius 12px; items: Statistics, Settings, **Help**, **Feedback**, Sign out (red) |
+| **Tab row** | Shown when `inListView === true`. Segmented control: **Books N \| Authors N \| Series N**. Counts via `useMemo` from `filtered`: total / unique authors / unique series. Active tab: white pill on `--surface-2`. |
 
-`FilterPanel` renders inline below the tab row when `filterOpen === true`.
+**Overlay mode** (when `overlayTitle` is set — used for Help and Feedback pages):  
+The logo/search/filters row is replaced by: `arrow_back` button → `onOverlayBack()` | centered title string | avatar button (menu still works).  
+Tab row and FilterPanel are hidden.
+
+`FilterPanel` renders inline below the tab row when `filterOpen === true` (normal mode only).
 
 ---
 
@@ -799,7 +886,7 @@ Text: "No Google Sheets found" in `--text-2`.
 | Checkout | `actions/checkout@v4` | |
 | Node.js | `actions/setup-node@v4` | Node 20, npm cache |
 | Install | `npm ci` | |
-| Build | `npm run build` (`tsc && vite build`) | Secrets: `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_BOOKS_API_KEY` |
+| Build | `npm run build` (`tsc && vite build`) | Secrets: `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_BOOKS_API_KEY`, `VITE_GOOGLE_API_KEY`, `VITE_FEEDBACK_URL` |
 | Configure pages | `actions/configure-pages@v4` | |
 | Upload artifact | `actions/upload-pages-artifact@v3` | path: `dist/` |
 | Deploy | `actions/deploy-pages@v4` | Outputs `page_url` |
@@ -828,13 +915,16 @@ Text: "No Google Sheets found" in `--text-2`.
    - Authorized redirect URIs: not required (implicit token flow — no redirect).
 
 3. **Google Cloud Console — APIs:**
-   - Enable: Google Sheets API, Google Drive API v3.
+   - Enable: Google Sheets API, Google Drive API v3, **Google Picker API**.
    - Optionally enable Google Books API and create an API key.
+   - Create a **browser API key** (for the Picker): Credentials → Create API key → restrict to "Google Picker API" + your domain.
 
 4. **Local env file** — create `.env.local` (not committed):
    ```
    VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
    VITE_GOOGLE_BOOKS_API_KEY=your-books-api-key
+   VITE_GOOGLE_API_KEY=your-browser-api-key
+   VITE_FEEDBACK_URL=https://your-feedback-endpoint  # optional
    ```
 
 5. **Run locally:**
@@ -845,7 +935,7 @@ Text: "No Google Sheets found" in `--text-2`.
 
 6. **GitHub Secrets** (for CI/CD deploy):
    - Repository Settings → Secrets and variables → Actions → New repository secret.
-   - Add `VITE_GOOGLE_CLIENT_ID` and `VITE_GOOGLE_BOOKS_API_KEY`.
+   - Add `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_BOOKS_API_KEY`, `VITE_GOOGLE_API_KEY`, and optionally `VITE_FEEDBACK_URL`.
    - GitHub Pages source must be set to "GitHub Actions" (not a branch).
 
 7. **Deploy:**
