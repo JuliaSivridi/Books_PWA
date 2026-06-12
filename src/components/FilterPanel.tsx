@@ -19,7 +19,15 @@ const TYPE_OPTIONS: { key: BookType | 'all'; label: string }[] = [
   { key: 'other',      label: TYPE_LABELS.other },
 ]
 
-export default function FilterPanel() {
+interface Props {
+  open: boolean
+  onClose: () => void
+}
+
+/** Bottom-sheet filter panel (same pattern as Money/Tasks): backdrop +
+ *  slide-up sheet, "Clear all filters" pinned at the top, filters apply
+ *  instantly — no Apply button (family convention). */
+export default function FilterPanel({ open, onClose }: Props) {
   const { filters, setFilters, clearFilters, activeFilterCount, allGenres } = useBooks()
 
   function toggleGenre(g: string) {
@@ -30,7 +38,24 @@ export default function FilterPanel() {
   }
 
   return (
-    <div className={styles.panel}>
+    <>
+      {open && <div className={styles.backdrop} onClick={onClose} />}
+
+      <div className={`${styles.sheet} ${open ? styles.sheetOpen : ''}`}>
+
+        <div className={styles.handleRow}>
+          <div className={styles.handle} />
+        </div>
+
+        {activeFilterCount > 0 && (
+          <div className={styles.clearWrap}>
+            <button className={styles.clearBtn} onClick={() => { clearFilters(); onClose() }}>
+              Clear all filters
+            </button>
+          </div>
+        )}
+
+        <div className={styles.panel}>
 
       <div className={styles.filterRow}>
         <span className={styles.filterLabel}>Status</span>
@@ -80,12 +105,8 @@ export default function FilterPanel() {
         </div>
       )}
 
-      {activeFilterCount > 0 && (
-        <button className={styles.clearBtn} onClick={clearFilters}>
-          Clear all filters
-        </button>
-      )}
-
-    </div>
+        </div>
+      </div>
+    </>
   )
 }

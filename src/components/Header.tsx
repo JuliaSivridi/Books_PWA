@@ -51,7 +51,7 @@ export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedb
           {overlayTitle ? (
             <>
               <button className={styles.overlayBack} onClick={onOverlayBack} title="Back to list">
-                <span className="material-symbols-outlined">arrow_back</span>
+                <span className="material-symbols-outlined">chevron_left</span>
               </button>
               <span className={styles.overlayTitle}>{overlayTitle}</span>
             </>
@@ -170,9 +170,11 @@ export default function Header({ onLogoClick, onStatsClick, onHelpClick, onFeedb
           </div>
         )}
 
-        {!overlayTitle && filterOpen && <FilterPanel />}
-
       </header>
+
+      {!overlayTitle && (
+        <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
+      )}
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </>
