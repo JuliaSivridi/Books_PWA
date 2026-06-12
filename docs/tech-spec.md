@@ -169,7 +169,7 @@ Books-PWA/
 │       ├── LoginPage.module.css
 │       ├── Header.tsx          Sticky top bar: logo, search, filter toggle, user menu; overlay mode for Help/Feedback
 │       ├── Header.module.css
-│       ├── FilterPanel.tsx     Expandable filter: status chips + type chips + genre chips
+│       ├── FilterPanel.tsx     Bottom-sheet filter: backdrop + slide-up sheet, status/type/genre chips
 │       ├── FilterPanel.module.css
 │       ├── BookGrid.tsx        Container: loading/error/empty states, FAB, AddBookModal
 │       ├── BookGrid.module.css
@@ -751,19 +751,21 @@ Sticky, `top: 0`, `z-index: 10`, `backdrop-filter: blur(12px)`, background `rgba
 | **Tab row** | Shown when `inListView === true`. Segmented control: **Books N \| Authors N \| Series N**. Counts via `useMemo` from `filtered`: total / unique authors / unique series. Active tab: white pill on `--surface-2`. |
 
 **Overlay mode** (when `overlayTitle` is set — used for Help and Feedback pages):  
-The logo/search/filters row is replaced by: `arrow_back` button → `onOverlayBack()` | centered title string | avatar button (menu still works).  
+The logo/search/filters row is replaced by: `chevron_left` button → `onOverlayBack()` | centered title string | avatar button (menu still works).  
 Tab row and FilterPanel are hidden.
 
-`FilterPanel` renders inline below the tab row when `filterOpen === true` (normal mode only).
+`FilterPanel` renders as a sibling outside `<header>` (bottom sheet), always mounted; visibility controlled by `open` prop.
 
 ---
 
 ### FilterPanel
 
 **File:** `src/components/FilterPanel.tsx`  
-(No props — reads/writes `BooksContext` directly)
+**Props:** `open: boolean`, `onClose: () => void`
 
-Three rows: Status, Type, Genre. Labels sit above their chip group (column layout). Panel has `max-height: calc(100svh - 130px); overflow-y: auto` to prevent overflow on small screens.
+Bottom sheet (family convention — same pattern as Money/Tasks PWA): full-width backdrop + slide-up sheet. A drag handle row sits at the top of the sheet. "Clear all filters" button appears pinned below the handle when `activeFilterCount > 0`; tapping it clears filters and calls `onClose()`. Filters apply instantly — no Apply button. Reads/writes `BooksContext` directly for filter state.
+
+Three rows: Status, Type, Genre.
 
 **Status chips:** All / Want / Reading / Read  
 Active chip for Want/Reading/Read uses the same amber/blue/green color scheme as the status dots (`data-status` attribute drives CSS).
