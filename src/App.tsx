@@ -107,9 +107,18 @@ function AppInner() {
   useEffect(() => {
     const unsub = onAuthChange(async isAuth => {
       if (!isAuth) { setPhase('login'); return }
+      // Offline: skip the Drive API check, go straight to cached books
+      if (!navigator.onLine && localStorage.getItem('books_sheet_id')) {
+        setPhase('ready')
+        return
+      }
       try {
         setPhase(await checkBooksFile() === 'ready' ? 'ready' : 'setup')
       } catch (e) {
+        if (!navigator.onLine && localStorage.getItem('books_sheet_id')) {
+          setPhase('ready')
+          return
+        }
         setDriveError(String(e))
         setPhase('login')
       }

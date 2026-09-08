@@ -96,6 +96,8 @@ export function BooksProvider({ children }: { children: React.ReactNode }) {
     const cached = await cacheGet<Book[]>('books')
     if (cached?.length) dispatch({ type: 'SET', payload: cached })
 
+    if (!navigator.onLine) return   // cached data is already on screen
+
     try {
       await initializeSheet()
       dispatch({ type: 'SET', payload: await fetchBooks() })

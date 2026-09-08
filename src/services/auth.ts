@@ -187,6 +187,12 @@ export async function initAuth(clientId: string): Promise<void> {
     return
   }
 
+  // Offline path: token may be expired but cached books are available
+  if (!navigator.onLine && getUser()) {
+    notify(true)
+    return
+  }
+
   await waitForGIS()
   if (getUser()) {
     const ok = await trySilentSignIn()
