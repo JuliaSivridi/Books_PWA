@@ -100,7 +100,7 @@ The Google Books API key can also be entered inside the app (Settings → Google
 
 ## Data Model
 
-All data lives in the user's **db_books** Google Spreadsheet, found or created automatically on first login. A single sheet (tab name: Books) stores one book per row.
+All data lives in the user's **db_books** Google Spreadsheet, created or picked by the user on first run (`drive.file` scope — no silent Drive search). A new file starts empty; a single sheet (tab name: Books) stores one book per row.
 
 | Col | Field | Description |
 |-----|-------|-------------|
